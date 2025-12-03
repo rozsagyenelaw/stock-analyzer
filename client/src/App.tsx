@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import Dashboard from './pages/Dashboard';
 import StockDetail from './pages/StockDetail';
+import Watchlist from './pages/Watchlist';
 import Journal from './pages/Journal';
 import Alerts from './pages/Alerts';
 import Settings from './pages/Settings';
@@ -15,6 +16,7 @@ function App() {
           <Routes>
             <Route path="/" element={<Dashboard />} />
             <Route path="/stock/:symbol" element={<StockDetail />} />
+            <Route path="/watchlist" element={<Watchlist />} />
             <Route path="/journal" element={<Journal />} />
             <Route path="/alerts" element={<Alerts />} />
             <Route path="/settings" element={<Settings />} />
