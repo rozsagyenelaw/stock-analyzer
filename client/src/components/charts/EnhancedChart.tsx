@@ -2,23 +2,14 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import {
   createChart,
   IChartApi,
-  ISeriesApi,
   CandlestickData,
   Time,
   LineData,
-  MouseEventParams,
-  LogicalRange,
 } from 'lightweight-charts';
 import { useQuery } from '@tanstack/react-query';
 import { stocksApi } from '@/services/api';
 import {
-  TrendingUp,
-  Plus,
-  Minus,
   Save,
-  Download,
-  Settings,
-  Maximize2,
   AlertTriangle,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -70,9 +61,6 @@ export default function EnhancedChart({ symbol, height = 600 }: EnhancedChartPro
   const chartRef = useRef<IChartApi | null>(null);
   const mainSeriesRef = useRef<any>(null);
   const volumeSeriesRef = useRef<any>(null);
-  const macdSeriesRef = useRef<any[]>([]);
-  const rsiSeriesRef = useRef<any>(null);
-  const stochSeriesRef = useRef<any[]>([]);
 
   const [chartType, setChartType] = useState<ChartType>('candlestick');
   const [timeframe, setTimeframe] = useState<Timeframe>('3month');
@@ -80,8 +68,7 @@ export default function EnhancedChart({ symbol, height = 600 }: EnhancedChartPro
   const [showMACD, setShowMACD] = useState(false);
   const [showRSI, setShowRSI] = useState(false);
   const [showStochastic, setShowStochastic] = useState(false);
-  const [activeTool, setActiveTool] = useState<DrawingTool>('none');
-  const [drawings, setDrawings] = useState<DrawingLine[]>([]);
+  const [drawings] = useState<DrawingLine[]>([]);
   const [patterns, setPatterns] = useState<PatternDetection[]>([]);
   const [templates, setTemplates] = useState<ChartTemplate[]>([]);
 
@@ -178,126 +165,8 @@ export default function EnhancedChart({ symbol, height = 600 }: EnhancedChartPro
     return { upper, middle, lower };
   }, []);
 
-  // Calculate MACD
-  const calculateMACD = useCallback((data: any[]) => {
-    const prices = data.map((d) => parseFloat(d.close));
-    const ema12 = [];
-    const ema26 = [];
-    const macdLine: LineData[] = [];
-    const signalLine: LineData[] = [];
-    const histogram: any[] = [];
-
-    // Calculate EMA12
-    let ema = prices.slice(0, 12).reduce((a, b) => a + b, 0) / 12;
-    const mult12 = 2 / 13;
-    for (let i = 12; i < prices.length; i++) {
-      ema = (prices[i] - ema) * mult12 + ema;
-      ema12.push(ema);
-    }
-
-    // Calculate EMA26
-    ema = prices.slice(0, 26).reduce((a, b) => a + b, 0) / 26;
-    const mult26 = 2 / 27;
-    for (let i = 26; i < prices.length; i++) {
-      ema = (prices[i] - ema) * mult26 + ema;
-      ema26.push(ema);
-    }
-
-    // Calculate MACD line
-    const offset = 26 - 12;
-    for (let i = 0; i < ema26.length; i++) {
-      const macdValue = ema12[i + offset] - ema26[i];
-      const time = (new Date(data[i + 26].datetime).getTime() / 1000) as Time;
-      macdLine.push({ time, value: macdValue });
-    }
-
-    // Calculate Signal line (9-day EMA of MACD)
-    if (macdLine.length >= 9) {
-      const macdValues = macdLine.map((d) => d.value);
-      let signalEMA = macdValues.slice(0, 9).reduce((a, b) => a + b, 0) / 9;
-      const mult9 = 2 / 10;
-
-      for (let i = 9; i < macdValues.length; i++) {
-        signalEMA = (macdValues[i] - signalEMA) * mult9 + signalEMA;
-        const time = macdLine[i].time;
-        signalLine.push({ time, value: signalEMA });
-
-        // Histogram
-        const histValue = macdValues[i] - signalEMA;
-        histogram.push({
-          time,
-          value: histValue,
-          color: histValue >= 0 ? 'rgba(38, 166, 154, 0.5)' : 'rgba(239, 83, 80, 0.5)',
-        });
-      }
-    }
-
-    return { macdLine, signalLine, histogram };
-  }, []);
-
-  // Calculate RSI
-  const calculateRSI = useCallback((data: any[], period = 14) => {
-    const prices = data.map((d) => parseFloat(d.close));
-    const rsiData: LineData[] = [];
-    const changes = [];
-
-    for (let i = 1; i < prices.length; i++) {
-      changes.push(prices[i] - prices[i - 1]);
-    }
-
-    for (let i = period; i < changes.length; i++) {
-      const slice = changes.slice(i - period, i);
-      const gains = slice.filter((c) => c > 0);
-      const losses = slice.filter((c) => c < 0).map((c) => Math.abs(c));
-
-      const avgGain = gains.length > 0 ? gains.reduce((a, b) => a + b, 0) / period : 0;
-      const avgLoss = losses.length > 0 ? losses.reduce((a, b) => a + b, 0) / period : 0;
-
-      const rs = avgLoss === 0 ? 100 : avgGain / avgLoss;
-      const rsi = 100 - 100 / (1 + rs);
-
-      rsiData.push({
-        time: (new Date(data[i + 1].datetime).getTime() / 1000) as Time,
-        value: rsi,
-      });
-    }
-
-    return rsiData;
-  }, []);
-
-  // Calculate Stochastic
-  const calculateStochastic = useCallback((data: any[], kPeriod = 14, dPeriod = 3) => {
-    const kLine: LineData[] = [];
-    const dLine: LineData[] = [];
-
-    for (let i = kPeriod - 1; i < data.length; i++) {
-      const slice = data.slice(i - kPeriod + 1, i + 1);
-      const highs = slice.map((d: any) => parseFloat(d.high));
-      const lows = slice.map((d: any) => parseFloat(d.low));
-      const close = parseFloat(data[i].close);
-
-      const highestHigh = Math.max(...highs);
-      const lowestLow = Math.min(...lows);
-      const k = ((close - lowestLow) / (highestHigh - lowestLow)) * 100;
-
-      kLine.push({
-        time: (new Date(data[i].datetime).getTime() / 1000) as Time,
-        value: k,
-      });
-    }
-
-    // Calculate %D (SMA of %K)
-    for (let i = dPeriod - 1; i < kLine.length; i++) {
-      const slice = kLine.slice(i - dPeriod + 1, i + 1);
-      const avg = slice.reduce((sum, item) => sum + item.value, 0) / dPeriod;
-      dLine.push({
-        time: kLine[i].time,
-        value: avg,
-      });
-    }
-
-    return { kLine, dLine };
-  }, []);
+  // Note: MACD, RSI, and Stochastic calculations removed to reduce unused code
+  // These can be added back when needed for future indicator features
 
   // Pattern Detection
   const detectPatterns = useCallback((data: any[]): PatternDetection[] => {
@@ -351,10 +220,8 @@ export default function EnhancedChart({ symbol, height = 600 }: EnhancedChartPro
     // Detect Ascending Triangle
     for (let i = 30; i < prices.length - 10; i++) {
       const highs = data.slice(i - 30, i).map((d: any) => parseFloat(d.high));
-      const lows = data.slice(i - 30, i).map((d: any) => parseFloat(d.low));
 
       const resistanceLevel = Math.max(...highs);
-      const lowTrend = lows.slice(-10).reduce((a, b) => a + b, 0) / 10;
 
       if (Math.abs(resistanceLevel - Math.max(...highs.slice(-10))) / resistanceLevel < 0.01) {
         detected.push({
@@ -393,9 +260,14 @@ export default function EnhancedChart({ symbol, height = 600 }: EnhancedChartPro
   const loadTemplate = useCallback(
     (template: ChartTemplate) => {
       setChartType(template.chartType);
-      setIndicators(template.indicators);
+      setIndicators({
+        sma20: template.indicators.sma20 ?? false,
+        sma50: template.indicators.sma50 ?? false,
+        sma200: template.indicators.sma200 ?? false,
+        ema: template.indicators.ema ?? false,
+        bb: template.indicators.bb ?? false,
+      });
       setTimeframe(template.timeframe);
-      setDrawings(template.drawings);
       toast.success(`Loaded template: ${template.name}`);
     },
     []
@@ -491,7 +363,6 @@ export default function EnhancedChart({ symbol, height = 600 }: EnhancedChartPro
         color: '#26a69a',
         priceFormat: { type: 'volume' },
         priceScaleId: '',
-        scaleMargins: { top: 0.8, bottom: 0 },
       });
 
       const volumeData = data

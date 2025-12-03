@@ -215,10 +215,6 @@ export default function AdvancedChart({ symbol, data, height = 500 }: AdvancedCh
           type: 'volume',
         },
         priceScaleId: '',
-        scaleMargins: {
-          top: 0.8,
-          bottom: 0,
-        },
       });
       volumeSeries.setData(formatVolumeData(data));
       volumeSeriesRef.current = volumeSeries;
