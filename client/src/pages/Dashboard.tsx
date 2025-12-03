@@ -23,7 +23,14 @@ export default function Dashboard() {
 
     try {
       const results = await stocksApi.search(searchQuery);
-      setSearchResults(results.data || []);
+      // Remove duplicates by symbol
+      const uniqueResults = (results.data || []).reduce((acc: any[], curr: any) => {
+        if (!acc.find(item => item.symbol === curr.symbol)) {
+          acc.push(curr);
+        }
+        return acc;
+      }, []);
+      setSearchResults(uniqueResults);
     } catch (error) {
       toast.error('Failed to search stocks');
     }

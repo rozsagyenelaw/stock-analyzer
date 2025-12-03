@@ -11,8 +11,15 @@ import { stocksApi } from '@/services/api';
 import {
   Save,
   AlertTriangle,
+  Download,
+  Maximize2,
+  Minimize2,
+  Palette,
+  Grid3x3,
+  Plus as PlusIcon,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import html2canvas from 'html2canvas';
 
 interface EnhancedChartProps {
   symbol: string;
@@ -61,6 +68,9 @@ export default function EnhancedChart({ symbol, height = 600 }: EnhancedChartPro
   const chartRef = useRef<IChartApi | null>(null);
   const mainSeriesRef = useRef<any>(null);
   const volumeSeriesRef = useRef<any>(null);
+  const macdContainerRef = useRef<HTMLDivElement>(null);
+  const rsiContainerRef = useRef<HTMLDivElement>(null);
+  const stochasticContainerRef = useRef<HTMLDivElement>(null);
 
   const [chartType, setChartType] = useState<ChartType>('candlestick');
   const [timeframe, setTimeframe] = useState<Timeframe>('3month');
@@ -71,6 +81,15 @@ export default function EnhancedChart({ symbol, height = 600 }: EnhancedChartPro
   const [drawings] = useState<DrawingLine[]>([]);
   const [patterns, setPatterns] = useState<PatternDetection[]>([]);
   const [templates, setTemplates] = useState<ChartTemplate[]>([]);
+
+  // New advanced features state
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [activeTool, setActiveTool] = useState<DrawingTool>('none');
+  const [compareSymbols, setCompareSymbols] = useState<string[]>([]);
+  const [theme, setTheme] = useState<'dark' | 'light'>('dark');
+  const [showGrid, setShowGrid] = useState(true);
+  const [drawingPoints, setDrawingPoints] = useState<Array<{ time: number; price: number }>>([]);
+  const [drawnLines, setDrawnLines] = useState<DrawingLine[]>([]);
 
   const [indicators, setIndicators] = useState({
     sma20: false,
@@ -88,6 +107,19 @@ export default function EnhancedChart({ symbol, height = 600 }: EnhancedChartPro
       return stocksApi.getTimeSeries(symbol, config.interval, config.outputsize);
     },
     enabled: !!symbol,
+  });
+
+  // Fetch comparison symbols data
+  const comparisonQueries = compareSymbols.map(sym => {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    return useQuery({
+      queryKey: ['stock-timeseries', sym, timeframe],
+      queryFn: () => {
+        const config = TIMEFRAME_MAP[timeframe];
+        return stocksApi.getTimeSeries(sym, config.interval, config.outputsize);
+      },
+      enabled: !!sym,
+    });
   });
 
   // Format data functions
@@ -165,8 +197,125 @@ export default function EnhancedChart({ symbol, height = 600 }: EnhancedChartPro
     return { upper, middle, lower };
   }, []);
 
-  // Note: MACD, RSI, and Stochastic calculations removed to reduce unused code
-  // These can be added back when needed for future indicator features
+  // Calculate MACD
+  const calculateMACD = useCallback((data: any[]) => {
+    const prices = data.map((d) => parseFloat(d.close));
+    const ema12: number[] = [];
+    const ema26: number[] = [];
+    const macdLine: LineData[] = [];
+    const signalLine: LineData[] = [];
+    const histogram: any[] = [];
+
+    // Calculate EMA 12
+    let ema = prices.slice(0, 12).reduce((a, b) => a + b, 0) / 12;
+    for (let i = 0; i < prices.length; i++) {
+      if (i >= 12) {
+        ema = (prices[i] - ema) * (2 / 13) + ema;
+      }
+      ema12.push(ema);
+    }
+
+    // Calculate EMA 26
+    ema = prices.slice(0, 26).reduce((a, b) => a + b, 0) / 26;
+    for (let i = 0; i < prices.length; i++) {
+      if (i >= 26) {
+        ema = (prices[i] - ema) * (2 / 27) + ema;
+      }
+      ema26.push(ema);
+    }
+
+    // Calculate MACD line
+    const macdValues: number[] = [];
+    for (let i = 0; i < prices.length; i++) {
+      const macdVal = ema12[i] - ema26[i];
+      macdValues.push(macdVal);
+      macdLine.push({
+        time: (new Date(data[i].datetime).getTime() / 1000) as Time,
+        value: macdVal,
+      });
+    }
+
+    // Calculate Signal line (EMA 9 of MACD)
+    ema = macdValues.slice(0, 9).reduce((a, b) => a + b, 0) / 9;
+    for (let i = 0; i < macdValues.length; i++) {
+      if (i >= 9) {
+        ema = (macdValues[i] - ema) * (2 / 10) + ema;
+      }
+      signalLine.push({
+        time: (new Date(data[i].datetime).getTime() / 1000) as Time,
+        value: ema,
+      });
+      histogram.push({
+        time: (new Date(data[i].datetime).getTime() / 1000) as Time,
+        value: macdValues[i] - ema,
+        color: macdValues[i] - ema >= 0 ? 'rgba(76, 175, 80, 0.5)' : 'rgba(255, 82, 82, 0.5)',
+      });
+    }
+
+    return { macdLine, signalLine, histogram };
+  }, []);
+
+  // Calculate RSI
+  const calculateRSI = useCallback((data: any[], period = 14): LineData[] => {
+    const prices = data.map((d) => parseFloat(d.close));
+    const rsi: LineData[] = [];
+
+    for (let i = period; i < prices.length; i++) {
+      let gains = 0;
+      let losses = 0;
+
+      for (let j = i - period; j < i; j++) {
+        const change = prices[j + 1] - prices[j];
+        if (change > 0) gains += change;
+        else losses -= change;
+      }
+
+      const avgGain = gains / period;
+      const avgLoss = losses / period;
+      const rs = avgGain / avgLoss;
+      const rsiValue = 100 - 100 / (1 + rs);
+
+      rsi.push({
+        time: (new Date(data[i].datetime).getTime() / 1000) as Time,
+        value: rsiValue,
+      });
+    }
+
+    return rsi;
+  }, []);
+
+  // Calculate Stochastic
+  const calculateStochastic = useCallback((data: any[], period = 14) => {
+    const kLine: LineData[] = [];
+    const dLine: LineData[] = [];
+
+    for (let i = period - 1; i < data.length; i++) {
+      const slice = data.slice(i - period + 1, i + 1);
+      const highs = slice.map((d: any) => parseFloat(d.high));
+      const lows = slice.map((d: any) => parseFloat(d.low));
+      const close = parseFloat(data[i].close);
+
+      const highestHigh = Math.max(...highs);
+      const lowestLow = Math.min(...lows);
+      const k = ((close - lowestLow) / (highestHigh - lowestLow)) * 100;
+
+      kLine.push({
+        time: (new Date(data[i].datetime).getTime() / 1000) as Time,
+        value: k,
+      });
+    }
+
+    // Calculate D line (3-period SMA of K)
+    for (let i = 2; i < kLine.length; i++) {
+      const dValue = (kLine[i - 2].value + kLine[i - 1].value + kLine[i].value) / 3;
+      dLine.push({
+        time: kLine[i].time,
+        value: dValue,
+      });
+    }
+
+    return { kLine, dLine };
+  }, []);
 
   // Pattern Detection
   const detectPatterns = useCallback((data: any[]): PatternDetection[] => {
@@ -273,6 +422,117 @@ export default function EnhancedChart({ symbol, height = 600 }: EnhancedChartPro
     []
   );
 
+  // Screenshot/Export functionality
+  const handleExportChart = useCallback(async () => {
+    if (!chartContainerRef.current) return;
+
+    try {
+      const canvas = await html2canvas(chartContainerRef.current, {
+        backgroundColor: theme === 'dark' ? '#1f2937' : '#ffffff',
+      });
+
+      const link = document.createElement('a');
+      link.download = `${symbol}-chart-${new Date().toISOString().split('T')[0]}.png`;
+      link.href = canvas.toDataURL();
+      link.click();
+
+      toast.success('Chart exported successfully!');
+    } catch (error) {
+      toast.error('Failed to export chart');
+      console.error(error);
+    }
+  }, [symbol, theme]);
+
+  // Fullscreen functionality
+  const toggleFullscreen = useCallback(() => {
+    setIsFullscreen(!isFullscreen);
+    toast.success(isFullscreen ? 'Exited fullscreen' : 'Entered fullscreen');
+  }, [isFullscreen]);
+
+  // Add comparison symbol
+  const addCompareSymbol = useCallback(() => {
+    const newSymbol = prompt('Enter symbol to compare:');
+    if (newSymbol && !compareSymbols.includes(newSymbol.toUpperCase())) {
+      setCompareSymbols([...compareSymbols, newSymbol.toUpperCase()]);
+      toast.success(`Added ${newSymbol.toUpperCase()} for comparison`);
+    }
+  }, [compareSymbols]);
+
+  // Remove comparison symbol
+  const removeCompareSymbol = useCallback((symbolToRemove: string) => {
+    setCompareSymbols(compareSymbols.filter(s => s !== symbolToRemove));
+    toast.success(`Removed ${symbolToRemove} from comparison`);
+  }, [compareSymbols]);
+
+  // Drawing tool handler
+  const handleDrawingToolClick = useCallback((tool: DrawingTool) => {
+    setActiveTool(tool);
+    setDrawingPoints([]);
+    if (tool !== 'none') {
+      toast(`${tool} drawing mode activated. Click on chart to draw.`, {
+        icon: '✏️',
+      });
+    }
+  }, []);
+
+  // Handle chart click for drawing
+  const handleChartClick = useCallback((param: any) => {
+    if (activeTool === 'none' || !param.point || !param.time) return;
+
+    const price = param.seriesData?.get(mainSeriesRef.current);
+    if (!price) return;
+
+    const priceValue = typeof price === 'object' && 'close' in price ? price.close : price.value;
+    const newPoint = { time: param.time as number, price: priceValue };
+
+    if (activeTool === 'horizontal') {
+      // Horizontal line only needs one point
+      const line: DrawingLine = {
+        id: `${activeTool}-${Date.now()}`,
+        type: activeTool,
+        points: [newPoint],
+        color: '#2962ff',
+      };
+      setDrawnLines(prev => [...prev, line]);
+      setActiveTool('none');
+      toast.success('Horizontal line added');
+    } else if (activeTool === 'trendline') {
+      // Trendline needs two points
+      if (drawingPoints.length === 0) {
+        setDrawingPoints([newPoint]);
+        toast('Click again to complete trendline', { icon: '📍' });
+      } else {
+        const line: DrawingLine = {
+          id: `${activeTool}-${Date.now()}`,
+          type: activeTool,
+          points: [drawingPoints[0], newPoint],
+          color: '#f44336',
+        };
+        setDrawnLines(prev => [...prev, line]);
+        setDrawingPoints([]);
+        setActiveTool('none');
+        toast.success('Trendline added');
+      }
+    } else if (activeTool === 'fibonacci') {
+      // Fibonacci needs two points
+      if (drawingPoints.length === 0) {
+        setDrawingPoints([newPoint]);
+        toast('Click again to complete Fibonacci levels', { icon: '📍' });
+      } else {
+        const line: DrawingLine = {
+          id: `${activeTool}-${Date.now()}`,
+          type: activeTool,
+          points: [drawingPoints[0], newPoint],
+          color: '#9c27b0',
+        };
+        setDrawnLines(prev => [...prev, line]);
+        setDrawingPoints([]);
+        setActiveTool('none');
+        toast.success('Fibonacci levels added');
+      }
+    }
+  }, [activeTool, drawingPoints, mainSeriesRef]);
+
   // Load saved templates on mount
   useEffect(() => {
     const saved = localStorage.getItem(`chart-templates-${symbol}`);
@@ -285,41 +545,67 @@ export default function EnhancedChart({ symbol, height = 600 }: EnhancedChartPro
     }
   }, [symbol]);
 
+  // Detect patterns separately to avoid infinite loop
+  useEffect(() => {
+    if (!timeSeries?.values || timeSeries.values.length === 0) return;
+
+    // Sort data in ascending order by datetime
+    const data = [...timeSeries.values].sort((a, b) =>
+      new Date(a.datetime).getTime() - new Date(b.datetime).getTime()
+    );
+
+    // Detect patterns
+    const detectedPatterns = detectPatterns(data);
+    setPatterns(detectedPatterns);
+  }, [timeSeries, detectPatterns]);
+
   // Main chart rendering
   useEffect(() => {
     if (!chartContainerRef.current || !timeSeries?.values || timeSeries.values.length === 0)
       return;
 
-    const data = timeSeries.values;
-
-    // Detect patterns
-    const detectedPatterns = detectPatterns(data);
-    setPatterns(detectedPatterns);
+    // Sort data in ascending order by datetime
+    const data = [...timeSeries.values].sort((a, b) =>
+      new Date(a.datetime).getTime() - new Date(b.datetime).getTime()
+    );
 
     // Calculate chart height based on panels
     const mainHeight = showMACD || showRSI || showStochastic ? height * 0.6 : height;
 
+    const isDark = theme === 'dark';
     const chart = createChart(chartContainerRef.current, {
       width: chartContainerRef.current.clientWidth,
       height: mainHeight,
       layout: {
-        background: { color: '#1f2937' },
-        textColor: '#d1d5db',
+        background: { color: isDark ? '#1f2937' : '#ffffff' },
+        textColor: isDark ? '#d1d5db' : '#374151',
       },
       grid: {
-        vertLines: { color: '#374151' },
-        horzLines: { color: '#374151' },
+        vertLines: { color: showGrid ? (isDark ? '#374151' : '#e5e7eb') : 'transparent' },
+        horzLines: { color: showGrid ? (isDark ? '#374151' : '#e5e7eb') : 'transparent' },
       },
       crosshair: {
         mode: 1,
-        vertLine: { width: 1, color: '#9ca3af', style: 3 },
-        horzLine: { width: 1, color: '#9ca3af', style: 3 },
+        vertLine: { width: 1, color: isDark ? '#9ca3af' : '#6b7280', style: 3 },
+        horzLine: { width: 1, color: isDark ? '#9ca3af' : '#6b7280', style: 3 },
       },
-      rightPriceScale: { borderColor: '#4b5563' },
+      rightPriceScale: { borderColor: isDark ? '#4b5563' : '#d1d5db' },
       timeScale: {
-        borderColor: '#4b5563',
+        borderColor: isDark ? '#4b5563' : '#d1d5db',
         timeVisible: true,
         secondsVisible: false,
+      },
+      // Mobile optimizations
+      handleScroll: {
+        mouseWheel: true,
+        pressedMouseMove: true,
+        horzTouchDrag: true,
+        vertTouchDrag: true,
+      },
+      handleScale: {
+        axisPressedMouseMove: true,
+        mouseWheel: true,
+        pinch: true,
       },
     });
 
@@ -405,6 +691,70 @@ export default function EnhancedChart({ symbol, height = 600 }: EnhancedChartPro
       chart.addLineSeries({ color: 'rgba(156, 39, 176, 0.5)', lineWidth: 1 }).setData(bb.lower);
     }
 
+    // Add comparison symbols
+    const comparisonColors = ['#ff6b6b', '#4ecdc4', '#45b7d1', '#f7b731', '#5f27cd'];
+    comparisonQueries.forEach((query, index) => {
+      if (query.data?.values && query.data.values.length > 0) {
+        const comparisonSeries = chart.addLineSeries({
+          color: comparisonColors[index % comparisonColors.length],
+          lineWidth: 2,
+        });
+        comparisonSeries.setData(formatLineData(query.data.values));
+      }
+    });
+
+    // Render drawn lines
+    drawnLines.forEach(line => {
+      if (line.type === 'horizontal' && line.points.length > 0) {
+        // Horizontal line
+        const horizontalLine = chart.addLineSeries({
+          color: line.color,
+          lineWidth: 2,
+          lineStyle: 2, // Dashed
+        });
+        const minTime = (data[0] ? new Date(data[0].datetime).getTime() / 1000 : 0) as Time;
+        const maxTime = (data[data.length - 1] ? new Date(data[data.length - 1].datetime).getTime() / 1000 : 0) as Time;
+        horizontalLine.setData([
+          { time: minTime, value: line.points[0].price },
+          { time: maxTime, value: line.points[0].price },
+        ]);
+      } else if (line.type === 'trendline' && line.points.length === 2) {
+        // Trendline
+        const trendLine = chart.addLineSeries({
+          color: line.color,
+          lineWidth: 2,
+        });
+        trendLine.setData([
+          { time: line.points[0].time as Time, value: line.points[0].price },
+          { time: line.points[1].time as Time, value: line.points[1].price },
+        ]);
+      } else if (line.type === 'fibonacci' && line.points.length === 2) {
+        // Fibonacci retracement levels
+        const startPrice = line.points[0].price;
+        const endPrice = line.points[1].price;
+        const diff = endPrice - startPrice;
+        const levels = [0, 0.236, 0.382, 0.5, 0.618, 0.786, 1];
+        const minTime = Math.min(line.points[0].time, line.points[1].time) as Time;
+        const maxTime = Math.max(line.points[0].time, line.points[1].time) as Time;
+
+        levels.forEach((level) => {
+          const price = startPrice + diff * level;
+          const fibLine = chart.addLineSeries({
+            color: line.color,
+            lineWidth: 1,
+            lineStyle: 2,
+          });
+          fibLine.setData([
+            { time: minTime, value: price },
+            { time: maxTime, value: price },
+          ]);
+        });
+      }
+    });
+
+    // Subscribe to click events for drawing
+    chart.subscribeClick(handleChartClick);
+
     chart.timeScale().fitContent();
 
     // Handle resize
@@ -429,13 +779,177 @@ export default function EnhancedChart({ symbol, height = 600 }: EnhancedChartPro
     showMACD,
     showRSI,
     showStochastic,
+    theme,
+    showGrid,
+    drawnLines,
+    comparisonQueries,
+    handleChartClick,
     formatCandlestickData,
     formatLineData,
     calculateSMA,
     calculateEMA,
     calculateBollingerBands,
-    detectPatterns,
   ]);
+
+  // Render MACD, RSI, Stochastic panels
+  useEffect(() => {
+    if (!timeSeries?.values || timeSeries.values.length === 0) return;
+
+    // Sort data in ascending order by datetime
+    const data = [...timeSeries.values].sort((a, b) =>
+      new Date(a.datetime).getTime() - new Date(b.datetime).getTime()
+    );
+    const panelHeight = 150;
+
+    // Render MACD panel
+    if (showMACD && macdContainerRef.current) {
+      const macdChart = createChart(macdContainerRef.current, {
+        width: macdContainerRef.current.clientWidth,
+        height: panelHeight,
+        layout: {
+          background: { color: theme === 'dark' ? '#1f2937' : '#ffffff' },
+          textColor: theme === 'dark' ? '#d1d5db' : '#374151',
+        },
+        grid: {
+          vertLines: { color: showGrid ? (theme === 'dark' ? '#374151' : '#e5e7eb') : 'transparent' },
+          horzLines: { color: showGrid ? (theme === 'dark' ? '#374151' : '#e5e7eb') : 'transparent' },
+        },
+        timeScale: {
+          borderColor: theme === 'dark' ? '#4b5563' : '#d1d5db',
+          timeVisible: true,
+        },
+        handleScroll: {
+          mouseWheel: true,
+          pressedMouseMove: true,
+          horzTouchDrag: true,
+          vertTouchDrag: true,
+        },
+        handleScale: {
+          axisPressedMouseMove: true,
+          mouseWheel: true,
+          pinch: true,
+        },
+      });
+
+      const { macdLine, signalLine, histogram } = calculateMACD(data);
+      const macdSeries = macdChart.addLineSeries({ color: '#2196f3', lineWidth: 2 });
+      macdSeries.setData(macdLine);
+      const signalSeries = macdChart.addLineSeries({ color: '#ff9800', lineWidth: 2 });
+      signalSeries.setData(signalLine);
+      const histogramSeries = macdChart.addHistogramSeries({ priceFormat: { type: 'price' } });
+      histogramSeries.setData(histogram);
+
+      macdChart.timeScale().fitContent();
+
+      return () => macdChart.remove();
+    }
+  }, [timeSeries, showMACD, theme, showGrid, calculateMACD]);
+
+  useEffect(() => {
+    if (!timeSeries?.values || timeSeries.values.length === 0) return;
+
+    // Sort data in ascending order by datetime
+    const data = [...timeSeries.values].sort((a, b) =>
+      new Date(a.datetime).getTime() - new Date(b.datetime).getTime()
+    );
+    const panelHeight = 150;
+
+    // Render RSI panel
+    if (showRSI && rsiContainerRef.current) {
+      const rsiChart = createChart(rsiContainerRef.current, {
+        width: rsiContainerRef.current.clientWidth,
+        height: panelHeight,
+        layout: {
+          background: { color: theme === 'dark' ? '#1f2937' : '#ffffff' },
+          textColor: theme === 'dark' ? '#d1d5db' : '#374151',
+        },
+        grid: {
+          vertLines: { color: showGrid ? (theme === 'dark' ? '#374151' : '#e5e7eb') : 'transparent' },
+          horzLines: { color: showGrid ? (theme === 'dark' ? '#374151' : '#e5e7eb') : 'transparent' },
+        },
+        timeScale: {
+          borderColor: theme === 'dark' ? '#4b5563' : '#d1d5db',
+          timeVisible: true,
+        },
+        handleScroll: {
+          mouseWheel: true,
+          pressedMouseMove: true,
+          horzTouchDrag: true,
+          vertTouchDrag: true,
+        },
+        handleScale: {
+          axisPressedMouseMove: true,
+          mouseWheel: true,
+          pinch: true,
+        },
+      });
+
+      const rsiData = calculateRSI(data);
+      const rsiSeries = rsiChart.addLineSeries({ color: '#9c27b0', lineWidth: 2 });
+      rsiSeries.setData(rsiData);
+
+      // Add overbought/oversold lines
+      const overboughtLine = rsiChart.addLineSeries({ color: 'rgba(255, 82, 82, 0.5)', lineWidth: 1, lineStyle: 2 });
+      const oversoldLine = rsiChart.addLineSeries({ color: 'rgba(76, 175, 80, 0.5)', lineWidth: 1, lineStyle: 2 });
+      overboughtLine.setData(rsiData.map(d => ({ time: d.time, value: 70 })));
+      oversoldLine.setData(rsiData.map(d => ({ time: d.time, value: 30 })));
+
+      rsiChart.timeScale().fitContent();
+
+      return () => rsiChart.remove();
+    }
+  }, [timeSeries, showRSI, theme, showGrid, calculateRSI]);
+
+  useEffect(() => {
+    if (!timeSeries?.values || timeSeries.values.length === 0) return;
+
+    // Sort data in ascending order by datetime
+    const data = [...timeSeries.values].sort((a, b) =>
+      new Date(a.datetime).getTime() - new Date(b.datetime).getTime()
+    );
+    const panelHeight = 150;
+
+    // Render Stochastic panel
+    if (showStochastic && stochasticContainerRef.current) {
+      const stochChart = createChart(stochasticContainerRef.current, {
+        width: stochasticContainerRef.current.clientWidth,
+        height: panelHeight,
+        layout: {
+          background: { color: theme === 'dark' ? '#1f2937' : '#ffffff' },
+          textColor: theme === 'dark' ? '#d1d5db' : '#374151',
+        },
+        grid: {
+          vertLines: { color: showGrid ? (theme === 'dark' ? '#374151' : '#e5e7eb') : 'transparent' },
+          horzLines: { color: showGrid ? (theme === 'dark' ? '#374151' : '#e5e7eb') : 'transparent' },
+        },
+        timeScale: {
+          borderColor: theme === 'dark' ? '#4b5563' : '#d1d5db',
+          timeVisible: true,
+        },
+        handleScroll: {
+          mouseWheel: true,
+          pressedMouseMove: true,
+          horzTouchDrag: true,
+          vertTouchDrag: true,
+        },
+        handleScale: {
+          axisPressedMouseMove: true,
+          mouseWheel: true,
+          pinch: true,
+        },
+      });
+
+      const { kLine, dLine } = calculateStochastic(data);
+      const kSeries = stochChart.addLineSeries({ color: '#2196f3', lineWidth: 2 });
+      kSeries.setData(kLine);
+      const dSeries = stochChart.addLineSeries({ color: '#ff9800', lineWidth: 2 });
+      dSeries.setData(dLine);
+
+      stochChart.timeScale().fitContent();
+
+      return () => stochChart.remove();
+    }
+  }, [timeSeries, showStochastic, theme, showGrid, calculateStochastic]);
 
   if (isLoading) {
     return (
@@ -549,6 +1063,80 @@ export default function EnhancedChart({ symbol, height = 600 }: EnhancedChartPro
               </button>
             </div>
           </div>
+
+          {/* Row 3: Advanced Features */}
+          <div className="flex flex-wrap items-center gap-4 pt-2 border-t border-gray-300 dark:border-gray-600">
+            {/* Drawing Tools */}
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium">Draw:</span>
+              {(['none', 'trendline', 'horizontal', 'fibonacci'] as DrawingTool[]).map((tool) => (
+                <button
+                  key={tool}
+                  onClick={() => handleDrawingToolClick(tool)}
+                  className={`px-2 py-1 text-xs rounded ${
+                    activeTool === tool ? 'bg-primary-600 text-white' : 'bg-gray-200 dark:bg-gray-700'
+                  }`}
+                >
+                  {tool === 'none' ? 'None' : tool.charAt(0).toUpperCase() + tool.slice(1)}
+                </button>
+              ))}
+            </div>
+
+            {/* Compare Stocks */}
+            <div className="border-l pl-4 border-gray-300 dark:border-gray-600 flex gap-2 items-center">
+              <button
+                onClick={addCompareSymbol}
+                className="flex items-center gap-1 px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700"
+              >
+                <PlusIcon className="w-4 h-4" />
+                Compare
+              </button>
+              {compareSymbols.map(sym => (
+                <span key={sym} className="px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded text-xs flex items-center gap-1">
+                  {sym}
+                  <button onClick={() => removeCompareSymbol(sym)} className="ml-1 hover:text-red-600">×</button>
+                </span>
+              ))}
+            </div>
+
+            {/* Theme & Customization */}
+            <div className="border-l pl-4 border-gray-300 dark:border-gray-600 flex gap-2">
+              <button
+                onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+                className="flex items-center gap-1 px-3 py-1 text-sm bg-gray-600 text-white rounded hover:bg-gray-700"
+              >
+                <Palette className="w-4 h-4" />
+                {theme === 'dark' ? 'Light' : 'Dark'}
+              </button>
+              <button
+                onClick={() => setShowGrid(!showGrid)}
+                className={`flex items-center gap-1 px-3 py-1 text-sm rounded ${
+                  showGrid ? 'bg-gray-600 text-white' : 'bg-gray-200 dark:bg-gray-700'
+                }`}
+              >
+                <Grid3x3 className="w-4 h-4" />
+                Grid
+              </button>
+            </div>
+
+            {/* Export & Fullscreen */}
+            <div className="border-l pl-4 border-gray-300 dark:border-gray-600 flex gap-2">
+              <button
+                onClick={handleExportChart}
+                className="flex items-center gap-1 px-3 py-1 text-sm bg-purple-600 text-white rounded hover:bg-purple-700"
+              >
+                <Download className="w-4 h-4" />
+                Export
+              </button>
+              <button
+                onClick={toggleFullscreen}
+                className="flex items-center gap-1 px-3 py-1 text-sm bg-indigo-600 text-white rounded hover:bg-indigo-700"
+              >
+                {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
+                {isFullscreen ? 'Exit' : 'Fullscreen'}
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -561,6 +1149,28 @@ export default function EnhancedChart({ symbol, height = 600 }: EnhancedChartPro
           </div>
         </div>
         <div ref={chartContainerRef} className="rounded-lg overflow-hidden" />
+
+        {/* Indicator Panels */}
+        {showMACD && (
+          <div className="mt-2">
+            <div className="text-xs font-semibold mb-1 text-gray-600 dark:text-gray-400">MACD</div>
+            <div ref={macdContainerRef} className="rounded-lg overflow-hidden" />
+          </div>
+        )}
+
+        {showRSI && (
+          <div className="mt-2">
+            <div className="text-xs font-semibold mb-1 text-gray-600 dark:text-gray-400">RSI (14)</div>
+            <div ref={rsiContainerRef} className="rounded-lg overflow-hidden" />
+          </div>
+        )}
+
+        {showStochastic && (
+          <div className="mt-2">
+            <div className="text-xs font-semibold mb-1 text-gray-600 dark:text-gray-400">Stochastic (14)</div>
+            <div ref={stochasticContainerRef} className="rounded-lg overflow-hidden" />
+          </div>
+        )}
       </div>
 
       {/* Pattern Detection */}
