@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { stocksApi, watchlistApi } from '@/services/api';
 import { TrendingUp, TrendingDown, Plus, Check } from 'lucide-react';
 import toast from 'react-hot-toast';
+import AdvancedChart from '@/components/charts/AdvancedChart';
 
 export default function StockDetail() {
   const { symbol } = useParams<{ symbol: string }>();
@@ -10,6 +11,12 @@ export default function StockDetail() {
   const { data: analysis, isLoading } = useQuery({
     queryKey: ['stock-analysis', symbol],
     queryFn: () => stocksApi.getAnalysis(symbol!),
+    enabled: !!symbol,
+  });
+
+  const { data: timeSeries, isLoading: isLoadingChart } = useQuery({
+    queryKey: ['stock-timeseries', symbol],
+    queryFn: () => stocksApi.getTimeSeries(symbol!, '1day', 200),
     enabled: !!symbol,
   });
 
@@ -143,6 +150,20 @@ export default function StockDetail() {
           </div>
         </div>
       </div>
+
+      {/* Advanced Chart */}
+      {!isLoadingChart && timeSeries && timeSeries.values && timeSeries.values.length > 0 && (
+        <AdvancedChart symbol={symbol!} data={timeSeries.values} height={600} />
+      )}
+
+      {isLoadingChart && (
+        <div className="card p-8">
+          <div className="flex items-center justify-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+            <span className="ml-4 text-gray-600 dark:text-gray-400">Loading chart...</span>
+          </div>
+        </div>
+      )}
 
       {/* Technical Indicators */}
       <div className="card p-6">
