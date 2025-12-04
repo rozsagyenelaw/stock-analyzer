@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { calculateVolumeProfile, CandleData, VolumeProfileLevel } from '@/utils/technicalIndicators';
+import { calculateVolumeProfile, CandleData } from '@/utils/technicalIndicators';
 
 interface VolumeProfileProps {
   data: CandleData[];
