@@ -545,3 +545,113 @@ export interface OptionsAnalysis {
     daysUntil: number;
   };
 }
+
+// Portfolio Management Types
+export interface PortfolioHolding {
+  id: string;
+  symbol: string;
+  name: string;
+  shares: number;
+  avgCost: number;
+  currentPrice: number;
+  marketValue: number;
+  costBasis: number;
+  unrealizedPL: number;
+  unrealizedPLPercent: number;
+  dayChange: number;
+  dayChangePercent: number;
+  sector?: string;
+  industry?: string;
+  weight: number; // Portfolio weight percentage
+  firstPurchaseDate: string;
+  lastUpdated: string;
+}
+
+export interface PortfolioSummary {
+  totalValue: number;
+  totalCost: number;
+  totalPL: number;
+  totalPLPercent: number;
+  dayChange: number;
+  dayChangePercent: number;
+  cashBalance: number;
+  holdings: number;
+  lastUpdated: string;
+}
+
+export interface RiskMetrics {
+  portfolioBeta: number;
+  sharpeRatio: number;
+  volatility: number; // Annualized standard deviation
+  valueAtRisk: number; // VaR 95%
+  maxDrawdown: number;
+  correlationMatrix: { [key: string]: { [key: string]: number } };
+  concentrationRisk: {
+    topHolding: number;
+    top5Holdings: number;
+    herfindahlIndex: number;
+  };
+}
+
+export interface DiversificationAnalysis {
+  sectorAllocation: {
+    sector: string;
+    value: number;
+    weight: number;
+    holdings: number;
+  }[];
+  assetAllocation: {
+    type: 'Stocks' | 'Cash' | 'Options';
+    value: number;
+    weight: number;
+  }[];
+  diversificationScore: number; // 0-100
+  recommendations: string[];
+}
+
+export interface PerformanceAttribution {
+  periodReturn: number;
+  benchmarkReturn: number;
+  alpha: number;
+  attribution: {
+    symbol: string;
+    contribution: number; // Contribution to total return
+    weight: number;
+    return: number;
+  }[];
+  timeWeightedReturn: number;
+  moneyWeightedReturn: number; // IRR
+}
+
+export interface PortfolioPerformance {
+  daily: { date: string; value: number; return: number }[];
+  cumulative: {
+    '1D': number;
+    '1W': number;
+    '1M': number;
+    '3M': number;
+    'YTD': number;
+    '1Y': number;
+    'ALL': number;
+  };
+  annualized: {
+    '1Y': number;
+    '3Y': number;
+    '5Y': number;
+    'ALL': number;
+  };
+}
+
+export interface Portfolio {
+  id: string;
+  name: string;
+  description?: string;
+  holdings: PortfolioHolding[];
+  summary: PortfolioSummary;
+  riskMetrics: RiskMetrics;
+  diversification: DiversificationAnalysis;
+  performance: PortfolioPerformance;
+  performanceAttribution: PerformanceAttribution;
+  created_at: string;
+  updated_at: string;
+}

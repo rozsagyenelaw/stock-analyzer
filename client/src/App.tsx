@@ -7,6 +7,7 @@ import Journal from './pages/Journal';
 import Alerts from './pages/Alerts';
 import Settings from './pages/Settings';
 import Screener from './pages/Screener';
+import Portfolio from './pages/Portfolio';
 import AITradeJournal from './pages/AITradeJournal';
 import EarningsAnalyzer from './pages/EarningsAnalyzer';
 import GreeksMonitor from './pages/GreeksMonitor';
@@ -23,6 +24,7 @@ function App() {
             <Route path="/stocks/:symbol" element={<StockDetail />} />
             <Route path="/watchlist" element={<Watchlist />} />
             <Route path="/screener" element={<Screener />} />
+            <Route path="/portfolio" element={<Portfolio />} />
             <Route path="/journal" element={<Journal />} />
             <Route path="/alerts" element={<Alerts />} />
             <Route path="/settings" element={<Settings />} />

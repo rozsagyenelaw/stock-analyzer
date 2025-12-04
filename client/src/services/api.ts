@@ -523,4 +523,45 @@ export const aiApi = {
   },
 };
 
+// Portfolio API
+export const portfolioApi = {
+  getAll: async () => {
+    const response = await api.get('/portfolio');
+    return response.data;
+  },
+
+  get: async (id: string) => {
+    const response = await api.get(`/portfolio/${id}`);
+    return response.data;
+  },
+
+  create: async (data: { name: string; description?: string; cash_balance?: number }) => {
+    const response = await api.post('/portfolio', data);
+    return response.data;
+  },
+
+  delete: async (id: string) => {
+    const response = await api.delete(`/portfolio/${id}`);
+    return response.data;
+  },
+
+  addTransaction: async (id: string, transaction: {
+    symbol: string;
+    type: 'BUY' | 'SELL';
+    shares: number;
+    price: number;
+    transaction_date?: string;
+    commission?: number;
+    notes?: string;
+  }) => {
+    const response = await api.post(`/portfolio/${id}/transaction`, transaction);
+    return response.data;
+  },
+
+  getTransactions: async (id: string) => {
+    const response = await api.get(`/portfolio/${id}/transactions`);
+    return response.data;
+  },
+};
+
 export default api;
