@@ -1,7 +1,5 @@
 import { Router } from 'express';
 import {
-  getMockEconomicEvents,
-  storeEconomicEvent,
   getEconomicEvents,
   generateMockSectorPerformance,
   storeSectorPerformance,
@@ -11,30 +9,73 @@ import {
   storeMarketRegime,
   getMarketRegime,
 } from '../services/economicCalendar';
+import {
+  updateEconomicIndicators,
+  getMacroIndicators,
+} from '../services/economicData';
 
 const router = Router();
 
 /**
- * GET /api/economy/calendar - Get economic calendar events
+ * GET /api/economy/indicators - Get macro economic indicators
+ */
+router.get('/indicators', async (req, res) => {
+  try {
+    const { type, start_date, end_date } = req.query;
+
+    // Try to get from database first
+    let indicators = getMacroIndicators(
+      type as string,
+      start_date as string,
+      end_date as string,
+      100
+    );
+
+    // If no data, fetch from API and store
+    if (indicators.length === 0) {
+      console.log('No indicators in database, fetching from Alpha Vantage...');
+      await updateEconomicIndicators();
+      indicators = getMacroIndicators(
+        type as string,
+        start_date as string,
+        end_date as string,
+        100
+      );
+    }
+
+    res.json(indicators);
+  } catch (error: any) {
+    console.error('Error fetching indicators:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/**
+ * POST /api/economy/indicators/refresh - Refresh economic indicators from API
+ */
+router.post('/indicators/refresh', async (req, res) => {
+  try {
+    const count = await updateEconomicIndicators();
+    res.json({ message: `Updated ${count} economic indicators`, count });
+  } catch (error: any) {
+    console.error('Error refreshing indicators:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/**
+ * GET /api/economy/calendar - Get economic calendar events (deprecated - use indicators)
  */
 router.get('/calendar', async (req, res) => {
   try {
-    const { start_date, end_date, impact } = req.query;
-
-    let events = getEconomicEvents(
-      start_date as string,
-      end_date as string,
-      impact as string
-    );
-
-    // If no events, generate mock data
-    if (events.length === 0) {
-      const mockEvents = getMockEconomicEvents(60);
-      mockEvents.forEach(event => storeEconomicEvent(event));
-      events = getEconomicEvents(start_date as string, end_date as string, impact as string);
-    }
-
-    res.json(events);
+    // Return empty for now - calendar events require a different API source
+    // Alpha Vantage provides historical data, not future calendar events
+    // Recommend using Trading Economics API or similar for calendar events
+    res.json({
+      message: 'Calendar events require Trading Economics API or similar. Using macro indicators instead.',
+      indicators_endpoint: '/api/economy/indicators',
+      events: [],
+    });
   } catch (error: any) {
     console.error('Error fetching calendar:', error);
     res.status(500).json({ error: error.message });

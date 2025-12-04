@@ -22,8 +22,7 @@ interface NewsAPIArticle {
  */
 export async function fetchNewsForSymbol(symbol: string, limit: number = 20): Promise<any[]> {
   if (!NEWS_API_KEY) {
-    console.warn('NEWS_API_KEY not configured, using mock data');
-    return getMockNews(symbol, limit);
+    throw new Error('NEWS_API_KEY not configured. Get a free key at https://newsapi.org');
   }
 
   try {
@@ -54,8 +53,8 @@ export async function fetchNewsForSymbol(symbol: string, limit: number = 20): Pr
 
     return [];
   } catch (error: any) {
-    console.error('Error fetching news:', error.message);
-    return getMockNews(symbol, limit);
+    console.error('Error fetching news from NewsAPI:', error.message);
+    throw new Error(`Failed to fetch news: ${error.message}`);
   }
 }
 
@@ -64,8 +63,7 @@ export async function fetchNewsForSymbol(symbol: string, limit: number = 20): Pr
  */
 export async function fetchTopHeadlines(category: string = 'business', limit: number = 20): Promise<any[]> {
   if (!NEWS_API_KEY) {
-    console.warn('NEWS_API_KEY not configured, using mock data');
-    return getMockNews('MARKET', limit);
+    throw new Error('NEWS_API_KEY not configured. Get a free key at https://newsapi.org');
   }
 
   try {
@@ -73,6 +71,7 @@ export async function fetchTopHeadlines(category: string = 'business', limit: nu
       params: {
         category,
         language: 'en',
+        country: 'us',
         pageSize: limit,
         apiKey: NEWS_API_KEY,
       },
@@ -94,8 +93,8 @@ export async function fetchTopHeadlines(category: string = 'business', limit: nu
 
     return [];
   } catch (error: any) {
-    console.error('Error fetching headlines:', error.message);
-    return getMockNews('MARKET', limit);
+    console.error('Error fetching headlines from NewsAPI:', error.message);
+    throw new Error(`Failed to fetch headlines: ${error.message}`);
   }
 }
 
@@ -243,45 +242,6 @@ function categorizeArticle(title: string, description: string): string {
   return 'GENERAL';
 }
 
-/**
- * Get mock news data for development/testing
- */
-function getMockNews(symbol: string, limit: number): any[] {
-  const mockArticles = [
-    {
-      source: 'Bloomberg',
-      author: 'Financial Analyst',
-      title: `${symbol} Stock Surges on Strong Earnings Beat`,
-      description: `${symbol} reported quarterly earnings that exceeded analyst expectations, sending shares higher in after-hours trading.`,
-      url: `https://example.com/news/${symbol.toLowerCase()}-earnings-beat`,
-      image_url: 'https://via.placeholder.com/400x200',
-      published_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-      content: 'Full article content...',
-    },
-    {
-      source: 'Reuters',
-      author: 'Market Reporter',
-      title: `Analysts Upgrade ${symbol} Price Target`,
-      description: `Several Wall Street analysts raised their price targets for ${symbol} following positive industry trends.`,
-      url: `https://example.com/news/${symbol.toLowerCase()}-analyst-upgrade`,
-      image_url: 'https://via.placeholder.com/400x200',
-      published_at: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(),
-      content: 'Full article content...',
-    },
-    {
-      source: 'CNBC',
-      author: 'Business Correspondent',
-      title: `${symbol} Announces New Product Line`,
-      description: `${symbol} unveiled its latest product innovations at a press conference today.`,
-      url: `https://example.com/news/${symbol.toLowerCase()}-new-product`,
-      image_url: 'https://via.placeholder.com/400x200',
-      published_at: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
-      content: 'Full article content...',
-    },
-  ];
-
-  return mockArticles.slice(0, limit);
-}
 
 /**
  * Calculate sentiment metrics for a symbol

@@ -57,7 +57,7 @@ export async function fetchSubredditPosts(
     return [];
   } catch (error: any) {
     console.error(`Error fetching from r/${subreddit}:`, error.message);
-    return getMockRedditPosts(subreddit, limit);
+    throw new Error(`Failed to fetch from Reddit: ${error.message}`);
   }
 }
 
@@ -270,27 +270,3 @@ export function getRedditPosts(symbol?: string, limit: number = 50): any[] {
   return db.prepare(query).all(...params);
 }
 
-/**
- * Mock Reddit data for development
- */
-function getMockRedditPosts(subreddit: string, limit: number): any[] {
-  const symbols = ['AAPL', 'TSLA', 'GME', 'AMD', 'NVDA'];
-  const mockPosts = [];
-
-  for (let i = 0; i < Math.min(limit, 10); i++) {
-    const symbol = symbols[i % symbols.length];
-    mockPosts.push({
-      post_id: `mock_${i}`,
-      title: `Discussion: ${symbol} to the moon! 🚀`,
-      content: `${symbol} looking bullish. Great fundamentals and strong momentum.`,
-      author: `redditor_${i}`,
-      url: `https://reddit.com/r/${subreddit}/comments/mock_${i}`,
-      score: Math.floor(Math.random() * 1000),
-      comments_count: Math.floor(Math.random() * 100),
-      posted_at: new Date(Date.now() - Math.random() * 24 * 60 * 60 * 1000).toISOString(),
-      subreddit,
-    });
-  }
-
-  return mockPosts;
-}
