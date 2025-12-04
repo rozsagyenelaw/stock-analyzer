@@ -313,36 +313,116 @@ Based on:
 
 ## Production Deployment
 
-### Building for Production
+This application is designed to be deployed on Render with the backend as a Web Service and the frontend as a Static Site.
 
-```bash
-# Build both client and server
-npm run build
+### Prerequisites
+- Render account (https://render.com - free tier available)
+- GitHub repository connected to Render
+- TwelveData API key
 
-# Start production server
-npm start
-```
+### Deploy Backend (Web Service)
 
-### Environment Variables for Production
+1. **Create New Web Service** on Render
+2. **Connect GitHub Repository**
+3. **Configure Service**:
+   - **Name**: `stock-analyzer-api`
+   - **Root Directory**: `server`
+   - **Environment**: `Node`
+   - **Build Command**: `npm install && npm run build`
+   - **Start Command**: `npm start`
+   - **Instance Type**: Free (or paid for better performance)
 
-Update your `.env` file:
+4. **Add Environment Variables**:
+   ```
+   NODE_ENV=production
+   TWELVE_DATA_API_KEY=your_api_key_here
+   CLIENT_URL=https://your-frontend-url.onrender.com
+   PORT=3001
+   ```
 
-```env
-NODE_ENV=production
-CLIENT_URL=https://your-domain.com
-PORT=3001
+   Optional (for email alerts):
+   ```
+   GMAIL_USER=your-email@gmail.com
+   GMAIL_APP_PASSWORD=your_16_character_app_password
+   ```
 
-# Use PostgreSQL for production (optional)
-DATABASE_URL=postgresql://user:password@host:5432/stockanalyzer
-```
+5. **Deploy**: Render will automatically build and deploy your backend
+6. **Copy Backend URL**: Save your backend URL (e.g., `https://stock-analyzer-api.onrender.com`)
+
+### Deploy Frontend (Static Site)
+
+1. **Create New Static Site** on Render
+2. **Connect Same GitHub Repository**
+3. **Configure Site**:
+   - **Name**: `stock-analyzer`
+   - **Root Directory**: `client`
+   - **Build Command**: `npm install && npm run build`
+   - **Publish Directory**: `dist`
+
+4. **Add Environment Variable**:
+   ```
+   VITE_API_URL=https://stock-analyzer-api.onrender.com
+   ```
+   (Use the backend URL from step 1)
+
+5. **Deploy**: Render will build and deploy your frontend
+
+### Local Development Setup
+
+1. **Backend Environment** - Copy `server/.env.example` to `server/.env`:
+   ```bash
+   cd server
+   cp .env.example .env
+   ```
+
+   Edit `server/.env`:
+   ```env
+   TWELVE_DATA_API_KEY=your_api_key_here
+   GMAIL_USER=your-email@gmail.com
+   GMAIL_APP_PASSWORD=your_app_password
+   PORT=3001
+   NODE_ENV=development
+   CLIENT_URL=http://localhost:5173
+   ```
+
+2. **Frontend Environment** - Copy `client/.env.example` to `client/.env`:
+   ```bash
+   cd client
+   cp .env.example .env
+   ```
+
+   For local development, leave `VITE_API_URL` empty (defaults to localhost:3001)
+
+3. **Run Development Servers**:
+   ```bash
+   # From project root
+   npm run dev
+   ```
+
+### Render Free Tier Notes
+
+- **Backend**: Free tier web services spin down after 15 minutes of inactivity
+- **First Request**: May take 30-60 seconds as the service spins up
+- **Upgrade**: Consider paid tier for production use to avoid spin-down delays
+
+### Alternative Deployment (Netlify + Render)
+
+If your frontend is already on Netlify:
+
+1. **Keep Frontend on Netlify**
+2. **Deploy Backend on Render** (follow backend steps above)
+3. **Set Netlify Environment Variable**:
+   - Go to Site Settings → Environment Variables
+   - Add `VITE_API_URL` with your Render backend URL
+4. **Redeploy Netlify Site** to pick up new environment variable
 
 ### Database Migration (SQLite to PostgreSQL)
 
-The app uses SQLite by default. To use PostgreSQL:
+The app uses SQLite by default. For production with PostgreSQL:
 
-1. Install PostgreSQL
+1. Install PostgreSQL on Render (or use managed service)
 2. Create a database
-3. Update `DATABASE_URL` in `.env`
+3. Update `DATABASE_URL` in environment variables
 4. Modify `server/services/database.ts` to use `pg` instead of `better-sqlite3`
 
 ## Troubleshooting
