@@ -18,15 +18,25 @@ db.pragma('journal_mode = WAL');
 
 // Initialize database schema
 export function initializeDatabase(): void {
-  // In production (dist), schema.sql is in dist/database/
-  // In development, it's in ../database/
-  const schemaPath = existsSync(join(__dirname, '../database/schema.sql'))
-    ? join(__dirname, '../database/schema.sql')
-    : join(__dirname, '../../database/schema.sql');
-  const schema = readFileSync(schemaPath, 'utf-8');
+  // Check if database is already initialized by checking for tables
+  const tables = db.prepare("SELECT name FROM sqlite_master WHERE type='table'").all();
 
-  db.exec(schema);
-  console.log('Database initialized successfully');
+  if (tables.length === 0) {
+    // Database is empty, run schema
+    console.log('Initializing new database...');
+
+    // In production (dist), schema.sql is in dist/database/
+    // In development, it's in ../database/
+    const schemaPath = existsSync(join(__dirname, '../database/schema.sql'))
+      ? join(__dirname, '../database/schema.sql')
+      : join(__dirname, '../../database/schema.sql');
+    const schema = readFileSync(schemaPath, 'utf-8');
+
+    db.exec(schema);
+    console.log('Database initialized successfully');
+  } else {
+    console.log('Database already exists, skipping initialization');
+  }
 }
 
 // Initialize the database immediately
