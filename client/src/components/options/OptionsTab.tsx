@@ -2,16 +2,12 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { optionsApi } from '@/services/api';
 import {
-  TrendingUp,
-  TrendingDown,
   AlertTriangle,
-  DollarSign,
   Activity,
   BarChart3,
   Zap,
   Target,
 } from 'lucide-react';
-import type { OptionsChain, OptionContract, UnusualActivity } from '@/types';
 import OptionsChainView from './OptionsChainView';
 import UnusualActivityView from './UnusualActivityView';
 

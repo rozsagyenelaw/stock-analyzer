@@ -1,22 +1,13 @@
-import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { fundamentalsApi } from '@/services/api';
 import { CompanyFundamentals } from '@/types';
-import { TrendingUp, TrendingDown, DollarSign, Calculator, Users, Building2, Calendar } from 'lucide-react';
+import { TrendingUp, TrendingDown, DollarSign, Calculator, Users, Building2 } from 'lucide-react';
 
 interface FundamentalsTabProps {
   symbol: string;
 }
 
 export default function FundamentalsTab({ symbol }: FundamentalsTabProps) {
-  const [dcfAssumptions, setDcfAssumptions] = useState({
-    revenueGrowthRate: 0.15,
-    terminalGrowthRate: 0.03,
-    discountRate: 0.10,
-    projectionYears: 5,
-    fcfMargin: 0.15,
-  });
-
   const { data: fundamentals, isLoading } = useQuery<CompanyFundamentals>({
     queryKey: ['fundamentals', symbol],
     queryFn: () => fundamentalsApi.get(symbol),
@@ -38,9 +29,6 @@ export default function FundamentalsTab({ symbol }: FundamentalsTabProps) {
     );
   }
 
-  const latestIncome = fundamentals.incomeStatements[0];
-  const latestBalance = fundamentals.balanceSheets[0];
-  const latestCashFlow = fundamentals.cashFlows[0];
   const { ratios, dcf } = fundamentals;
 
   const formatCurrency = (value: number) => {

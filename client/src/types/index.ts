@@ -282,6 +282,7 @@ export interface DCFValuation {
     terminalGrowthRate: number;
     discountRate: number;
     projectionYears: number;
+    fcfMargin: number;
   };
   projections: Array<{
     year: number;

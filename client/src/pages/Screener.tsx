@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation } from '@tanstack/react-query';
 import { screenerApi } from '@/services/api';
 import { ScreenerScan, ScreenerResult, ScreenerFilter } from '@/types';
 import { Search, Play, Save, Trash2, Plus, X, Filter, TrendingUp, TrendingDown } from 'lucide-react';
@@ -8,7 +8,6 @@ import { useNavigate } from 'react-router-dom';
 
 export default function Screener() {
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
 
   const [selectedScan, setSelectedScan] = useState<ScreenerScan | null>(null);
   const [showCustomBuilder, setShowCustomBuilder] = useState(false);
