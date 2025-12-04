@@ -121,7 +121,7 @@ export default function AIAnalysisTab({ symbol }: AIAnalysisTabProps) {
         <div className="mt-4">
           <h3 className="font-semibold mb-2">Key Signals</h3>
           <div className="space-y-2">
-            {sentiment.signals.slice(0, 8).map((signal, index) => (
+            {sentiment.signals.slice(0, 8).map((signal: string, index: number) => (
               <div key={index} className="flex items-start gap-2 text-sm">
                 <span className="text-primary-600">•</span>
                 <span className="text-gray-700 dark:text-gray-300">{signal}</span>
@@ -183,7 +183,7 @@ export default function AIAnalysisTab({ symbol }: AIAnalysisTabProps) {
 
         {patterns.length > 0 ? (
           <div className="space-y-3">
-            {patterns.map((pattern, index) => (
+            {patterns.map((pattern: any, index: number) => (
               <div key={index} className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
@@ -233,12 +233,12 @@ export default function AIAnalysisTab({ symbol }: AIAnalysisTabProps) {
               <TrendingUp className="w-5 h-5" />
               Support Levels
             </h3>
-            {supportResistance.filter(sr => sr.type === 'support').length > 0 ? (
+            {supportResistance.filter((sr: any) => sr.type === 'support').length > 0 ? (
               <div className="space-y-2">
                 {supportResistance
-                  .filter(sr => sr.type === 'support')
-                  .sort((a, b) => b.price - a.price)
-                  .map((level, index) => (
+                  .filter((sr: any) => sr.type === 'support')
+                  .sort((a: any, b: any) => b.price - a.price)
+                  .map((level: any, index: number) => (
                     <div key={index} className="bg-green-50 dark:bg-green-900/20 rounded p-3">
                       <div className="flex justify-between items-center">
                         <span className="font-mono font-semibold">${level.price.toFixed(2)}</span>
@@ -263,12 +263,12 @@ export default function AIAnalysisTab({ symbol }: AIAnalysisTabProps) {
               <TrendingDown className="w-5 h-5" />
               Resistance Levels
             </h3>
-            {supportResistance.filter(sr => sr.type === 'resistance').length > 0 ? (
+            {supportResistance.filter((sr: any) => sr.type === 'resistance').length > 0 ? (
               <div className="space-y-2">
                 {supportResistance
-                  .filter(sr => sr.type === 'resistance')
-                  .sort((a, b) => a.price - b.price)
-                  .map((level, index) => (
+                  .filter((sr: any) => sr.type === 'resistance')
+                  .sort((a: any, b: any) => a.price - b.price)
+                  .map((level: any, index: number) => (
                     <div key={index} className="bg-red-50 dark:bg-red-900/20 rounded p-3">
                       <div className="flex justify-between items-center">
                         <span className="font-mono font-semibold">${level.price.toFixed(2)}</span>
@@ -327,7 +327,7 @@ interface PredictionCardProps {
   currentPrice: number;
 }
 
-function PredictionCard({ label, prediction, currentPrice }: PredictionCardProps) {
+function PredictionCard({ label, prediction }: PredictionCardProps) {
   const isPositive = prediction.change > 0;
 
   return (
