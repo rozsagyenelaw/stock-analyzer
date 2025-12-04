@@ -332,3 +332,215 @@ export interface CompanyFundamentals {
   earningsGrowthQoQ: number;
   earningsGrowthYoY: number;
 }
+
+// ============================================================================
+// OPTIONS ANALYSIS TYPES
+// ============================================================================
+
+export type OptionType = 'call' | 'put';
+export type OptionSide = 'buy' | 'sell';
+
+// The Greeks - measures of risk and sensitivity
+export interface OptionGreeks {
+  delta: number; // Price sensitivity (0-1 for calls, -1-0 for puts)
+  gamma: number; // Rate of delta change
+  theta: number; // Time decay per day
+  vega: number; // Volatility sensitivity
+  rho: number; // Interest rate sensitivity
+}
+
+// Individual option contract
+export interface OptionContract {
+  symbol: string; // Option symbol (e.g., AAPL250117C00150000)
+  strike: number;
+  expiration: string; // ISO date
+  type: OptionType;
+  bid: number;
+  ask: number;
+  last: number;
+  volume: number;
+  openInterest: number;
+  impliedVolatility: number; // IV as decimal (e.g., 0.35 = 35%)
+  greeks: OptionGreeks;
+  inTheMoney: boolean;
+  daysToExpiration: number;
+  intrinsicValue: number;
+  extrinsicValue: number;
+  breakeven: number;
+  probabilityITM: number; // Probability of being in the money at expiration
+}
+
+// Options chain for a specific expiration
+export interface OptionsChain {
+  symbol: string;
+  underlyingPrice: number;
+  expiration: string;
+  daysToExpiration: number;
+  calls: OptionContract[];
+  puts: OptionContract[];
+  impliedVolatility: number; // Average IV for the chain
+}
+
+// Multi-leg option strategy
+export interface OptionLeg {
+  id: string;
+  contract: OptionContract;
+  side: OptionSide; // buy or sell
+  quantity: number;
+}
+
+export interface OptionStrategy {
+  id?: string;
+  name: string;
+  description?: string;
+  legs: OptionLeg[];
+
+  // Strategy analysis
+  maxProfit: number | null; // null = unlimited
+  maxLoss: number | null; // null = unlimited
+  breakevens: number[];
+  netDebit: number; // Negative for credit strategies
+  probabilityOfProfit: number;
+  expectedValue: number;
+  returnOnRisk: number; // Potential return / max risk
+
+  // Greeks for the entire strategy
+  totalGreeks: OptionGreeks;
+
+  // Risk profile at different price points
+  profitLossProfile: Array<{
+    price: number;
+    profitLoss: number;
+    atExpiration: number;
+  }>;
+}
+
+// Pre-defined strategy templates
+export type StrategyTemplate =
+  // Single leg
+  | 'long_call' | 'long_put' | 'covered_call' | 'cash_secured_put'
+  // Spreads
+  | 'bull_call_spread' | 'bear_put_spread' | 'bull_put_spread' | 'bear_call_spread'
+  // Volatility
+  | 'long_straddle' | 'short_straddle' | 'long_strangle' | 'short_strangle'
+  | 'iron_condor' | 'iron_butterfly' | 'butterfly_spread'
+  // Advanced
+  | 'calendar_spread' | 'diagonal_spread' | 'ratio_spread' | 'jade_lizard';
+
+export interface StrategyTemplateInfo {
+  id: StrategyTemplate;
+  name: string;
+  description: string;
+  category: 'bullish' | 'bearish' | 'neutral' | 'volatility';
+  complexity: 'beginner' | 'intermediate' | 'advanced';
+  outlook: string;
+  maxProfit: 'limited' | 'unlimited';
+  maxLoss: 'limited' | 'unlimited';
+  idealConditions: string;
+  legs: number;
+}
+
+// Unusual options activity
+export interface UnusualActivity {
+  symbol: string;
+  contract: OptionContract;
+  timestamp: string;
+  volume: number;
+  openInterest: number;
+  volumeOIRatio: number; // Volume / Open Interest
+  premium: number; // Total premium traded
+  sentiment: 'bullish' | 'bearish' | 'neutral';
+  score: number; // Unusual activity score (0-100)
+  flags: Array<'high_volume' | 'unusual_sweep' | 'golden_sweep' | 'block_trade' | 'above_ask' | 'below_bid'>;
+}
+
+// Options flow for a symbol
+export interface OptionsFlow {
+  symbol: string;
+  date: string;
+  underlyingPrice: number;
+
+  // Aggregate statistics
+  totalCallVolume: number;
+  totalPutVolume: number;
+  putCallRatio: number;
+  totalCallOI: number;
+  totalPutOI: number;
+  netCallPremium: number;
+  netPutPremium: number;
+
+  // Sentiment indicators
+  sentiment: 'bullish' | 'bearish' | 'neutral';
+  sentimentScore: number; // -100 (bearish) to +100 (bullish)
+
+  // Unusual activity
+  unusualActivity: UnusualActivity[];
+
+  // Large trades
+  blockTrades: Array<{
+    contract: OptionContract;
+    side: OptionSide;
+    size: number;
+    premium: number;
+    timestamp: string;
+  }>;
+}
+
+// Volatility analysis
+export interface VolatilityAnalysis {
+  symbol: string;
+  currentIV: number; // Current implied volatility
+  historicalVolatility: number; // Actual realized volatility
+  ivRank: number; // Where current IV ranks in 52-week range (0-100)
+  ivPercentile: number; // Percentage of days IV was below current level
+
+  // IV by expiration
+  volatilityTermStructure: Array<{
+    expiration: string;
+    daysToExpiration: number;
+    iv: number;
+  }>;
+
+  // IV skew (puts vs calls)
+  skew: {
+    atmIV: number; // At-the-money IV
+    otmCallIV: number; // Out-of-money call IV
+    otmPutIV: number; // Out-of-money put IV
+    skewRatio: number; // Put IV / Call IV
+  };
+}
+
+// Options screener result
+export interface OptionScreenerResult {
+  contract: OptionContract;
+  score: number;
+  reasons: string[];
+  indicators: {
+    highVolume?: boolean;
+    highIV?: boolean;
+    lowIV?: boolean;
+    undervalued?: boolean;
+    goodRiskReward?: boolean;
+    nearEarnings?: boolean;
+  };
+}
+
+// Complete options analysis for a symbol
+export interface OptionsAnalysis {
+  symbol: string;
+  underlyingPrice: number;
+  chains: OptionsChain[];
+  flow: OptionsFlow;
+  volatility: VolatilityAnalysis;
+  suggestedStrategies: Array<{
+    template: StrategyTemplate;
+    strategy: OptionStrategy;
+    reasoning: string;
+    suitability: number; // 0-100 score
+  }>;
+  earnings?: {
+    date: string;
+    confirmed: boolean;
+    daysUntil: number;
+  };
+}

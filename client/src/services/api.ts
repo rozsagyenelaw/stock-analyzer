@@ -7,6 +7,10 @@ import type {
   TradeStats,
   Alert,
   UserSettings,
+  OptionsAnalysis,
+  OptionsChain,
+  OptionStrategy,
+  StrategyTemplate,
 } from '@/types';
 
 // Use environment variable for API URL, fallback to local development
@@ -212,6 +216,41 @@ export const fundamentalsApi = {
     fcfMargin: number;
   }) => {
     const response = await api.post(`/fundamentals/${symbol}/dcf`, assumptions);
+    return response.data;
+  },
+};
+
+// Options API
+export const optionsApi = {
+  getAnalysis: async (symbol: string): Promise<OptionsAnalysis> => {
+    const response = await api.get(`/options/${symbol}`);
+    return response.data;
+  },
+
+  getChain: async (symbol: string, expiration: string): Promise<OptionsChain> => {
+    const response = await api.get(`/options/${symbol}/chain`, {
+      params: { expiration },
+    });
+    return response.data;
+  },
+
+  analyzeStrategy: async (symbol: string, strategy: {
+    name: string;
+    description?: string;
+    legs: any[];
+  }): Promise<OptionStrategy> => {
+    const response = await api.post(`/options/${symbol}/strategy`, strategy);
+    return response.data;
+  },
+
+  buildStrategy: async (
+    symbol: string,
+    template: StrategyTemplate,
+    params?: { expiration?: string; dte?: number }
+  ): Promise<OptionStrategy> => {
+    const response = await api.get(`/options/${symbol}/strategy/${template}`, {
+      params,
+    });
     return response.data;
   },
 };

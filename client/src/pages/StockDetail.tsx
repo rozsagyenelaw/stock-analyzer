@@ -6,8 +6,9 @@ import toast from 'react-hot-toast';
 import { useState } from 'react';
 import EnhancedChart from '@/components/charts/EnhancedChart';
 import FundamentalsTab from '@/components/fundamentals/FundamentalsTab';
+import OptionsTab from '@/components/options/OptionsTab';
 
-type TabType = 'technical' | 'fundamentals';
+type TabType = 'technical' | 'fundamentals' | 'options';
 
 export default function StockDetail() {
   const { symbol } = useParams<{ symbol: string }>();
@@ -84,10 +85,10 @@ export default function StockDetail() {
       {/* Tab Navigation */}
       {analysis && (
         <div className="card p-0">
-          <div className="flex border-b border-gray-200 dark:border-gray-700">
+          <div className="flex border-b border-gray-200 dark:border-gray-700 overflow-x-auto">
             <button
               onClick={() => setActiveTab('technical')}
-              className={`flex-1 px-6 py-4 text-center font-semibold transition-colors ${
+              className={`flex-1 px-6 py-4 text-center font-semibold transition-colors whitespace-nowrap ${
                 activeTab === 'technical'
                   ? 'text-primary-600 border-b-2 border-primary-600 bg-primary-50 dark:bg-primary-900/20'
                   : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
@@ -97,13 +98,23 @@ export default function StockDetail() {
             </button>
             <button
               onClick={() => setActiveTab('fundamentals')}
-              className={`flex-1 px-6 py-4 text-center font-semibold transition-colors ${
+              className={`flex-1 px-6 py-4 text-center font-semibold transition-colors whitespace-nowrap ${
                 activeTab === 'fundamentals'
                   ? 'text-primary-600 border-b-2 border-primary-600 bg-primary-50 dark:bg-primary-900/20'
                   : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
               }`}
             >
               Fundamentals
+            </button>
+            <button
+              onClick={() => setActiveTab('options')}
+              className={`flex-1 px-6 py-4 text-center font-semibold transition-colors whitespace-nowrap ${
+                activeTab === 'options'
+                  ? 'text-primary-600 border-b-2 border-primary-600 bg-primary-50 dark:bg-primary-900/20'
+                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+              }`}
+            >
+              Options Analysis
             </button>
           </div>
         </div>
@@ -274,6 +285,9 @@ export default function StockDetail() {
 
       {/* Fundamentals Tab */}
       {symbol && activeTab === 'fundamentals' && <FundamentalsTab symbol={symbol} />}
+
+      {/* Options Tab */}
+      {symbol && activeTab === 'options' && <OptionsTab symbol={symbol} />}
     </div>
   );
 }
