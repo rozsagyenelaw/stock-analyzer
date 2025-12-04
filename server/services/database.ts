@@ -18,7 +18,11 @@ db.pragma('journal_mode = WAL');
 
 // Initialize database schema
 export function initializeDatabase(): void {
-  const schemaPath = join(__dirname, '../../database/schema.sql');
+  // In production (dist), schema.sql is in dist/database/
+  // In development, it's in ../database/
+  const schemaPath = existsSync(join(__dirname, '../database/schema.sql'))
+    ? join(__dirname, '../database/schema.sql')
+    : join(__dirname, '../../database/schema.sql');
   const schema = readFileSync(schemaPath, 'utf-8');
 
   db.exec(schema);

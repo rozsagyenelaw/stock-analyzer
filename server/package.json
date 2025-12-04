@@ -5,7 +5,7 @@
   "main": "dist/server.js",
   "scripts": {
     "dev": "tsx watch server.ts",
-    "build": "tsc || true",
+    "build": "tsc || true && mkdir -p dist/database && cp ../database/schema.sql dist/database/",
     "start": "node dist/server.js"
   },
   "dependencies": {
