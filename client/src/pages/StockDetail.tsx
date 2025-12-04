@@ -8,6 +8,7 @@ import EnhancedChart from '@/components/charts/EnhancedChart';
 import FundamentalsTab from '@/components/fundamentals/FundamentalsTab';
 import OptionsTab from '@/components/options/OptionsTab';
 import AIAnalysisTab from '@/components/ai/AIAnalysisTab';
+import AIRecommendationCard from '@/components/ai/AIRecommendationCard';
 
 type TabType = 'technical' | 'fundamentals' | 'options' | 'ai';
 
@@ -215,6 +216,9 @@ export default function StockDetail() {
               </div>
             </div>
           </div>
+
+          {/* AI Trading Recommendation */}
+          {symbol && <AIRecommendationCard symbol={symbol} />}
 
           {/* Technical Indicators */}
           <div className="card p-6">

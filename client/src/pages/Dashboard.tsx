@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { Search, TrendingUp, TrendingDown } from 'lucide-react';
 import { stocksApi, watchlistApi } from '@/services/api';
 import toast from 'react-hot-toast';
+import AITopPicks from '@/components/dashboard/AITopPicks';
 
 export default function Dashboard() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -101,6 +102,9 @@ export default function Dashboard() {
           )}
         </form>
       </div>
+
+      {/* AI Top Picks */}
+      <AITopPicks />
 
       {/* Watchlist */}
       <div className="card">
