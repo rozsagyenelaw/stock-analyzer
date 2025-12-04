@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { backtestApi } from '@/services/api';
-import { BacktestStrategy, BacktestRun } from '@/types';
-import { Play, Plus, BarChart3, Settings } from 'lucide-react';
+import { BacktestStrategy } from '@/types';
+import { Plus, BarChart3, Settings } from 'lucide-react';
 import StrategyList from '@/components/backtest/StrategyList';
 import StrategyBuilder from '@/components/backtest/StrategyBuilder';
 import BacktestResults from '@/components/backtest/BacktestResults';
@@ -13,7 +13,6 @@ export default function Backtest() {
   const [showStrategyBuilder, setShowStrategyBuilder] = useState(false);
   const [showRunModal, setShowRunModal] = useState(false);
   const [selectedStrategy, setSelectedStrategy] = useState<BacktestStrategy | null>(null);
-  const [selectedRun, setSelectedRun] = useState<BacktestRun | null>(null);
 
   const { data: strategies = [], refetch: refetchStrategies } = useQuery({
     queryKey: ['backtest-strategies'],
@@ -33,10 +32,6 @@ export default function Backtest() {
   const handleRunStrategy = (strategy: BacktestStrategy) => {
     setSelectedStrategy(strategy);
     setShowRunModal(true);
-  };
-
-  const handleViewRun = (run: BacktestRun) => {
-    setSelectedRun(run);
   };
 
   return (
@@ -107,7 +102,7 @@ export default function Backtest() {
       {selectedTab === 'results' && (
         <BacktestResults
           runs={runs}
-          onView={handleViewRun}
+          onView={() => {}}
           onDelete={async (id) => {
             await backtestApi.deleteRun(id);
             refetchRuns();

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { backtestApi } from '@/services/api';
 import { BacktestRun } from '@/types';
-import { Eye, Trash2, TrendingUp, TrendingDown, Clock, Target } from 'lucide-react';
+import { Eye, Trash2, Clock, Target } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 interface BacktestResultsProps {

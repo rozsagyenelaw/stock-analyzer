@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { backtestApi } from '@/services/api';
 import { BacktestStrategy, StrategyCondition } from '@/types';
