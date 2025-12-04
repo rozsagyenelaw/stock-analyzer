@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { portfolioApi } from '@/services/api';
-import { Portfolio as PortfolioType, PortfolioHolding } from '@/types';
-import { TrendingUp, TrendingDown, PieChart, BarChart3, Plus, Trash2, ArrowUpDown } from 'lucide-react';
+import { Portfolio as PortfolioType } from '@/types';
+import { TrendingUp, TrendingDown, PieChart, BarChart3, Plus, Trash2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import PortfolioOverview from '@/components/portfolio/PortfolioOverview';
 import HoldingsTable from '@/components/portfolio/HoldingsTable';
@@ -27,7 +27,7 @@ export default function Portfolio() {
   });
 
   // Fetch selected portfolio details
-  const { data: portfolio, isLoading: loadingPortfolio, refetch } = useQuery<PortfolioType>({
+  const { data: portfolio, isLoading: loadingPortfolio } = useQuery<PortfolioType>({
     queryKey: ['portfolio', selectedPortfolioId],
     queryFn: () => portfolioApi.get(selectedPortfolioId!),
     enabled: !!selectedPortfolioId,

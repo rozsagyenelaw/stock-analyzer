@@ -16,7 +16,7 @@ interface TransactionModalProps {
   isLoading: boolean;
 }
 
-export default function TransactionModal({ portfolioId, onClose, onSubmit, isLoading }: TransactionModalProps) {
+export default function TransactionModal({ onClose, onSubmit, isLoading }: TransactionModalProps) {
   const [symbol, setSymbol] = useState('');
   const [type, setType] = useState<'BUY' | 'SELL'>('BUY');
   const [shares, setShares] = useState('');

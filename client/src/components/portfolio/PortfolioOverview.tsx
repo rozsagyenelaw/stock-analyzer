@@ -1,5 +1,5 @@
 import { Portfolio } from '@/types';
-import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 
 interface PortfolioOverviewProps {
   portfolio: Portfolio;

@@ -7,8 +7,6 @@ interface PerformanceChartProps {
   performanceAttribution: PerformanceAttribution;
 }
 
-const COLORS = ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6'];
-
 export default function PerformanceChart({ performance, performanceAttribution }: PerformanceChartProps) {
   const formatPercent = (value: number) => `${value >= 0 ? '+' : ''}${value.toFixed(2)}%`;
 
@@ -17,7 +15,7 @@ export default function PerformanceChart({ performance, performanceAttribution }
     value: d.value,
   }));
 
-  const attributionData = performanceAttribution.attribution.slice(0, 10).map((attr, index) => ({
+  const attributionData = performanceAttribution.attribution.slice(0, 10).map((attr) => ({
     ...attr,
     fill: attr.contribution >= 0 ? '#10b981' : '#ef4444',
   }));
