@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
-import { EconomicEvent, SectorPerformance, MarketRegimeData, RotationSignal } from '@/types';
+import { EconomicEvent, SectorPerformance, RotationSignal } from '@/types';
 import { Calendar, TrendingUp, TrendingDown, Activity, AlertCircle } from 'lucide-react';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
