@@ -23,6 +23,8 @@ import {
 import toast from 'react-hot-toast';
 import html2canvas from 'html2canvas';
 import IndicatorSelector, { SelectedIndicator, AVAILABLE_INDICATORS } from './IndicatorSelector';
+import VolumeProfile from './VolumeProfile';
+import MultiTimeframeView from './MultiTimeframeView';
 import * as indicatorModule from '@/utils/technicalIndicators';
 
 // Helper function to convert indicator results to chart-compatible format
@@ -35,9 +37,9 @@ interface EnhancedChartProps {
   height?: number;
 }
 
-export type ChartType = 'candlestick' | 'line' | 'area' | 'bars';
+export type ChartType = 'candlestick' | 'line' | 'area' | 'bars' | 'heikinashi' | 'renko';
 export type Timeframe = '1day' | '1week' | '1month' | '3month' | '6month' | '1year' | '5year';
-export type DrawingTool = 'none' | 'trendline' | 'horizontal' | 'fibonacci';
+export type DrawingTool = 'none' | 'trendline' | 'horizontal' | 'fibonacci' | 'pitchfork' | 'channel' | 'rectangle' | 'text';
 
 interface DrawingLine {
   id: string;
@@ -84,6 +86,7 @@ export default function EnhancedChart({ symbol, height = 600 }: EnhancedChartPro
   const [chartType, setChartType] = useState<ChartType>('candlestick');
   const [timeframe, setTimeframe] = useState<Timeframe>('3month');
   const [showVolume, setShowVolume] = useState(true);
+  const [showVolumeProfile, setShowVolumeProfile] = useState(false);
   const [showMACD, setShowMACD] = useState(false);
   const [showRSI, setShowRSI] = useState(false);
   const [showStochastic, setShowStochastic] = useState(false);
@@ -103,6 +106,7 @@ export default function EnhancedChart({ symbol, height = 600 }: EnhancedChartPro
   // Indicator selector state
   const [showIndicatorSelector, setShowIndicatorSelector] = useState(false);
   const [selectedIndicators, setSelectedIndicators] = useState<SelectedIndicator[]>([]);
+  const [showMultiTimeframe, setShowMultiTimeframe] = useState(false);
 
   const [indicators, setIndicators] = useState({
     sma20: false,
@@ -656,6 +660,41 @@ export default function EnhancedChart({ symbol, height = 600 }: EnhancedChartPro
         wickDownColor: '#ef5350',
       });
       mainSeries.setData(formatCandlestickData(data));
+    } else if (chartType === 'heikinashi') {
+      // Heikin-Ashi candlestick chart
+      mainSeries = chart.addCandlestickSeries({
+        upColor: '#26a69a',
+        downColor: '#ef5350',
+        borderVisible: false,
+        wickUpColor: '#26a69a',
+        wickDownColor: '#ef5350',
+      });
+      const heikinAshiData = indicatorModule.calculateHeikinAshi(data);
+      mainSeries.setData(heikinAshiData);
+    } else if (chartType === 'renko') {
+      // Renko chart - use candlestick series with calculated brick size
+      const prices = data.map((d: any) => parseFloat(d.close));
+      const avgPrice = prices.reduce((a: number, b: number) => a + b, 0) / prices.length;
+      const brickSize = avgPrice * 0.005; // 0.5% brick size
+      const renkoData = indicatorModule.calculateRenko(data, brickSize);
+
+      mainSeries = chart.addCandlestickSeries({
+        upColor: '#26a69a',
+        downColor: '#ef5350',
+        borderVisible: false,
+        wickUpColor: '#26a69a',
+        wickDownColor: '#ef5350',
+      });
+
+      // Convert Renko blocks to candlestick format
+      const renkoCandles = renkoData.map(block => ({
+        time: block.time as Time,
+        open: block.open,
+        high: Math.max(block.open, block.close),
+        low: Math.min(block.open, block.close),
+        close: block.close,
+      }));
+      mainSeries.setData(renkoCandles);
     } else if (chartType === 'line') {
       mainSeries = chart.addLineSeries({ color: '#2962ff', lineWidth: 2 });
       mainSeries.setData(formatLineData(data));
@@ -1101,15 +1140,24 @@ export default function EnhancedChart({ symbol, height = 600 }: EnhancedChartPro
           <div className="flex flex-wrap items-center gap-4">
             <div className="flex items-center gap-2">
               <span className="text-sm font-medium">Type:</span>
-              {(['candlestick', 'line', 'area', 'bars'] as ChartType[]).map((type) => (
+              {(['candlestick', 'heikinashi', 'renko', 'line', 'area', 'bars'] as ChartType[]).map((type) => (
                 <button
                   key={type}
                   onClick={() => setChartType(type)}
                   className={`px-3 py-1 text-sm rounded ${
                     chartType === type ? 'bg-primary-600 text-white' : 'bg-gray-200 dark:bg-gray-700'
                   }`}
+                  title={
+                    type === 'heikinashi'
+                      ? 'Heikin-Ashi: Smoothed candles that filter noise'
+                      : type === 'renko'
+                      ? 'Renko: Fixed-size bricks based on price movement'
+                      : undefined
+                  }
                 >
-                  {type.charAt(0).toUpperCase() + type.slice(1)}
+                  {type === 'heikinashi'
+                    ? 'Heikin-Ashi'
+                    : type.charAt(0).toUpperCase() + type.slice(1)}
                 </button>
               ))}
             </div>
@@ -1141,6 +1189,15 @@ export default function EnhancedChart({ symbol, height = 600 }: EnhancedChartPro
                   className="mr-2"
                 />
                 <span className="text-sm font-medium">Volume</span>
+              </label>
+              <label className="flex items-center cursor-pointer ml-2">
+                <input
+                  type="checkbox"
+                  checked={showVolumeProfile}
+                  onChange={(e) => setShowVolumeProfile(e.target.checked)}
+                  className="mr-2"
+                />
+                <span className="text-sm font-medium">Volume Profile</span>
               </label>
             </div>
 
@@ -1206,13 +1263,24 @@ export default function EnhancedChart({ symbol, height = 600 }: EnhancedChartPro
             {/* Drawing Tools */}
             <div className="flex items-center gap-2">
               <span className="text-sm font-medium">Draw:</span>
-              {(['none', 'trendline', 'horizontal', 'fibonacci'] as DrawingTool[]).map((tool) => (
+              {(['none', 'trendline', 'horizontal', 'fibonacci', 'pitchfork', 'channel', 'rectangle', 'text'] as DrawingTool[]).map((tool) => (
                 <button
                   key={tool}
                   onClick={() => handleDrawingToolClick(tool)}
                   className={`px-2 py-1 text-xs rounded ${
                     activeTool === tool ? 'bg-primary-600 text-white' : 'bg-gray-200 dark:bg-gray-700'
                   }`}
+                  title={
+                    tool === 'pitchfork'
+                      ? 'Andrew\'s Pitchfork - click 3 points (pivot, high, low)'
+                      : tool === 'channel'
+                      ? 'Parallel Channel - click 4 points'
+                      : tool === 'rectangle'
+                      ? 'Rectangle - click 2 corners'
+                      : tool === 'text'
+                      ? 'Text Annotation - click to place'
+                      : undefined
+                  }
                 >
                   {tool === 'none' ? 'None' : tool.charAt(0).toUpperCase() + tool.slice(1)}
                 </button>
@@ -1256,8 +1324,15 @@ export default function EnhancedChart({ symbol, height = 600 }: EnhancedChartPro
               </button>
             </div>
 
-            {/* Export & Fullscreen */}
+            {/* Multi-Timeframe & Export */}
             <div className="border-l pl-4 border-gray-300 dark:border-gray-600 flex gap-2">
+              <button
+                onClick={() => setShowMultiTimeframe(true)}
+                className="flex items-center gap-1 px-3 py-1 text-sm bg-green-600 text-white rounded hover:bg-green-700"
+              >
+                <Grid3x3 className="w-4 h-4" />
+                Multi-TF
+              </button>
               <button
                 onClick={handleExportChart}
                 className="flex items-center gap-1 px-3 py-1 text-sm bg-purple-600 text-white rounded hover:bg-purple-700"
@@ -1285,7 +1360,12 @@ export default function EnhancedChart({ symbol, height = 600 }: EnhancedChartPro
             {TIMEFRAME_MAP[timeframe].label} • {chartType}
           </div>
         </div>
-        <div ref={chartContainerRef} className="rounded-lg overflow-hidden" />
+        <div className="flex gap-0">
+          <div ref={chartContainerRef} className="rounded-lg overflow-hidden flex-1" />
+          {showVolumeProfile && timeSeries?.values && (
+            <VolumeProfile data={timeSeries.values} height={height} width={180} />
+          )}
+        </div>
 
         {/* Indicator Panels */}
         {showMACD && (
@@ -1379,6 +1459,14 @@ export default function EnhancedChart({ symbol, height = 600 }: EnhancedChartPro
             </div>
           </div>
         </div>
+      )}
+
+      {/* Multi-Timeframe View Modal */}
+      {showMultiTimeframe && (
+        <MultiTimeframeView
+          symbol={symbol}
+          onClose={() => setShowMultiTimeframe(false)}
+        />
       )}
     </div>
   );

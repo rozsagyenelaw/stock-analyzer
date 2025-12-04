@@ -1530,3 +1530,179 @@ export function calculateVortex(data: CandleData[], period = 14) {
 
   return { viPlus, viMinus };
 }
+
+// ==================== SPECIAL CHART TYPES ====================
+
+export interface HeikinAshiCandle {
+  time: number;
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+}
+
+/**
+ * Heikin-Ashi Candlesticks
+ * Smoothed candlesticks that filter market noise and highlight trends
+ */
+export function calculateHeikinAshi(data: CandleData[]): HeikinAshiCandle[] {
+  const result: HeikinAshiCandle[] = [];
+
+  if (data.length === 0) return result;
+
+  // First candle
+  const first = data[0];
+  const firstOpen = parseFloat(String(first.open));
+  const firstHigh = parseFloat(String(first.high));
+  const firstLow = parseFloat(String(first.low));
+  const firstClose = parseFloat(String(first.close));
+
+  let prevHAOpen = (firstOpen + firstClose) / 2;
+  const firstHAClose = (firstOpen + firstHigh + firstLow + firstClose) / 4;
+
+  result.push({
+    time: new Date(first.datetime).getTime() / 1000,
+    open: prevHAOpen,
+    high: Math.max(firstHigh, prevHAOpen, firstHAClose),
+    low: Math.min(firstLow, prevHAOpen, firstHAClose),
+    close: firstHAClose,
+  });
+
+  // Rest of the candles
+  for (let i = 1; i < data.length; i++) {
+    const candle = data[i];
+    const open = parseFloat(String(candle.open));
+    const high = parseFloat(String(candle.high));
+    const low = parseFloat(String(candle.low));
+    const close = parseFloat(String(candle.close));
+
+    const haClose = (open + high + low + close) / 4;
+    const haOpen = (prevHAOpen + result[i - 1].close) / 2;
+    const haHigh = Math.max(high, haOpen, haClose);
+    const haLow = Math.min(low, haOpen, haClose);
+
+    result.push({
+      time: new Date(candle.datetime).getTime() / 1000,
+      open: haOpen,
+      high: haHigh,
+      low: haLow,
+      close: haClose,
+    });
+
+    prevHAOpen = haOpen;
+  }
+
+  return result;
+}
+
+export interface RenkoBlock {
+  time: number;
+  open: number;
+  close: number;
+  direction: 'up' | 'down';
+}
+
+/**
+ * Renko Charts
+ * Fixed-size price movement blocks that ignore time and focus purely on price changes
+ * @param data - OHLC price data
+ * @param brickSize - Size of each brick (e.g., 0.5 for $0.50 bricks)
+ */
+export function calculateRenko(data: CandleData[], brickSize: number): RenkoBlock[] {
+  const result: RenkoBlock[] = [];
+
+  if (data.length === 0 || brickSize <= 0) return result;
+
+  // Start with first price
+  const firstClose = parseFloat(String(data[0].close));
+  let currentBrickOpen = Math.floor(firstClose / brickSize) * brickSize;
+  let lastTime = new Date(data[0].datetime).getTime() / 1000;
+
+  for (let i = 0; i < data.length; i++) {
+    const close = parseFloat(String(data[i].close));
+    const time = new Date(data[i].datetime).getTime() / 1000;
+    lastTime = time;
+
+    // Check for upward bricks
+    while (close >= currentBrickOpen + brickSize) {
+      result.push({
+        time: lastTime,
+        open: currentBrickOpen,
+        close: currentBrickOpen + brickSize,
+        direction: 'up',
+      });
+      currentBrickOpen += brickSize;
+    }
+
+    // Check for downward bricks
+    while (close <= currentBrickOpen - brickSize) {
+      result.push({
+        time: lastTime,
+        open: currentBrickOpen,
+        close: currentBrickOpen - brickSize,
+        direction: 'down',
+      });
+      currentBrickOpen -= brickSize;
+    }
+  }
+
+  return result;
+}
+
+/**
+ * Volume Profile
+ * Calculates volume distribution at different price levels
+ */
+export interface VolumeProfileLevel {
+  price: number;
+  volume: number;
+  percentage: number;
+}
+
+export function calculateVolumeProfile(
+  data: CandleData[],
+  numLevels: number = 24
+): VolumeProfileLevel[] {
+  if (data.length === 0) return [];
+
+  // Find price range
+  const prices = data.map(d => parseFloat(String(d.close)));
+  const minPrice = Math.min(...prices);
+  const maxPrice = Math.max(...prices);
+  const priceStep = (maxPrice - minPrice) / numLevels;
+
+  // Initialize levels
+  const levels: VolumeProfileLevel[] = [];
+  for (let i = 0; i < numLevels; i++) {
+    levels.push({
+      price: minPrice + (i + 0.5) * priceStep,
+      volume: 0,
+      percentage: 0,
+    });
+  }
+
+  // Accumulate volume at each level
+  let totalVolume = 0;
+  for (const candle of data) {
+    const high = parseFloat(String(candle.high));
+    const low = parseFloat(String(candle.low));
+    const volume = parseFloat(String(candle.volume));
+    totalVolume += volume;
+
+    // Distribute volume proportionally across touched price levels
+    const minLevel = Math.floor((low - minPrice) / priceStep);
+    const maxLevel = Math.floor((high - minPrice) / priceStep);
+    const touchedLevels = maxLevel - minLevel + 1;
+
+    for (let i = Math.max(0, minLevel); i <= Math.min(numLevels - 1, maxLevel); i++) {
+      levels[i].volume += volume / touchedLevels;
+    }
+  }
+
+  // Calculate percentages
+  for (const level of levels) {
+    level.percentage = (level.volume / totalVolume) * 100;
+  }
+
+  return levels;
+}
