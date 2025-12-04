@@ -16,6 +16,7 @@ import journalRouter from './routes/journal';
 import alertsRouter from './routes/alerts';
 import settingsRouter from './routes/settings';
 import screenerRouter from './routes/screener';
+import fundamentalsRouter from './routes/fundamentals';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -83,6 +84,7 @@ app.use('/api/journal', journalRouter);
 app.use('/api/alerts', alertsRouter);
 app.use('/api/settings', settingsRouter);
 app.use('/api/screener', screenerRouter);
+app.use('/api/fundamentals', fundamentalsRouter);
 
 // Error handling middleware
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {

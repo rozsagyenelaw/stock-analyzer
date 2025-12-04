@@ -197,4 +197,23 @@ export const screenerApi = {
   },
 };
 
+// Fundamentals API
+export const fundamentalsApi = {
+  get: async (symbol: string) => {
+    const response = await api.get(`/fundamentals/${symbol}`);
+    return response.data;
+  },
+
+  calculateDCF: async (symbol: string, assumptions: {
+    revenueGrowthRate: number;
+    terminalGrowthRate: number;
+    discountRate: number;
+    projectionYears: number;
+    fcfMargin: number;
+  }) => {
+    const response = await api.post(`/fundamentals/${symbol}/dcf`, assumptions);
+    return response.data;
+  },
+};
+
 export default api;

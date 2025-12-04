@@ -202,3 +202,133 @@ export interface ScreenerResult {
   signal?: string;
   score?: number;
 }
+
+// Fundamental Analysis Types
+export interface IncomeStatement {
+  fiscalYear: string;
+  fiscalQuarter?: string;
+  revenue: number;
+  costOfRevenue: number;
+  grossProfit: number;
+  operatingExpenses: number;
+  operatingIncome: number;
+  netIncome: number;
+  eps: number;
+  ebitda: number;
+}
+
+export interface BalanceSheet {
+  fiscalYear: string;
+  fiscalQuarter?: string;
+  totalAssets: number;
+  currentAssets: number;
+  totalLiabilities: number;
+  currentLiabilities: number;
+  totalEquity: number;
+  cash: number;
+  debt: number;
+  workingCapital: number;
+}
+
+export interface CashFlow {
+  fiscalYear: string;
+  fiscalQuarter?: string;
+  operatingCashFlow: number;
+  investingCashFlow: number;
+  financingCashFlow: number;
+  freeCashFlow: number;
+  capitalExpenditures: number;
+}
+
+export interface FinancialRatios {
+  // Profitability
+  grossMargin: number;
+  operatingMargin: number;
+  netMargin: number;
+  roe: number; // Return on Equity
+  roa: number; // Return on Assets
+  roic: number; // Return on Invested Capital
+
+  // Liquidity
+  currentRatio: number;
+  quickRatio: number;
+  cashRatio: number;
+
+  // Leverage
+  debtToEquity: number;
+  debtToAssets: number;
+  interestCoverage: number;
+
+  // Efficiency
+  assetTurnover: number;
+  inventoryTurnover: number;
+  receivablesTurnover: number;
+
+  // Valuation
+  peRatio: number;
+  pbRatio: number;
+  psRatio: number;
+  pegRatio: number;
+  evToEbitda: number;
+  priceToFreeCashFlow: number;
+}
+
+export interface DCFValuation {
+  currentPrice: number;
+  intrinsicValue: number;
+  upside: number; // percentage
+  assumptions: {
+    revenueGrowthRate: number;
+    terminalGrowthRate: number;
+    discountRate: number;
+    projectionYears: number;
+  };
+  projections: Array<{
+    year: number;
+    revenue: number;
+    freeCashFlow: number;
+    discountedFCF: number;
+  }>;
+  terminalValue: number;
+  enterpriseValue: number;
+}
+
+export interface InsiderTransaction {
+  filingDate: string;
+  transactionDate: string;
+  insider: string;
+  title: string;
+  transactionType: 'Buy' | 'Sell' | 'Option Exercise' | 'Gift';
+  shares: number;
+  pricePerShare: number;
+  totalValue: number;
+  sharesOwned: number;
+}
+
+export interface CompanyFundamentals {
+  symbol: string;
+  name: string;
+  description?: string;
+  sector: string;
+  industry: string;
+  marketCap: number;
+  employees?: number;
+  founded?: string;
+  headquarters?: string;
+
+  // Financial Statements (latest 4 quarters or years)
+  incomeStatements: IncomeStatement[];
+  balanceSheets: BalanceSheet[];
+  cashFlows: CashFlow[];
+
+  // Analysis
+  ratios: FinancialRatios;
+  dcf: DCFValuation;
+  insiderTransactions: InsiderTransaction[];
+
+  // Growth Metrics
+  revenueGrowthQoQ: number;
+  revenueGrowthYoY: number;
+  earningsGrowthQoQ: number;
+  earningsGrowthYoY: number;
+}

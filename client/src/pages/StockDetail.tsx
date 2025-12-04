@@ -3,10 +3,15 @@ import { useQuery } from '@tanstack/react-query';
 import { stocksApi, watchlistApi } from '@/services/api';
 import { TrendingUp, TrendingDown, Plus, Check } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { useState } from 'react';
 import EnhancedChart from '@/components/charts/EnhancedChart';
+import FundamentalsTab from '@/components/fundamentals/FundamentalsTab';
+
+type TabType = 'technical' | 'fundamentals';
 
 export default function StockDetail() {
   const { symbol } = useParams<{ symbol: string }>();
+  const [activeTab, setActiveTab] = useState<TabType>('technical');
 
   const { data: analysis, isLoading, error } = useQuery({
     queryKey: ['stock-analysis', symbol],
@@ -76,11 +81,39 @@ export default function StockDetail() {
         </div>
       )}
 
-      {/* Enhanced Chart - Always show when symbol exists */}
-      {symbol && <EnhancedChart symbol={symbol} height={650} />}
-
-      {/* Only show analysis sections when data is available */}
+      {/* Tab Navigation */}
       {analysis && (
+        <div className="card p-0">
+          <div className="flex border-b border-gray-200 dark:border-gray-700">
+            <button
+              onClick={() => setActiveTab('technical')}
+              className={`flex-1 px-6 py-4 text-center font-semibold transition-colors ${
+                activeTab === 'technical'
+                  ? 'text-primary-600 border-b-2 border-primary-600 bg-primary-50 dark:bg-primary-900/20'
+                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+              }`}
+            >
+              Technical Analysis
+            </button>
+            <button
+              onClick={() => setActiveTab('fundamentals')}
+              className={`flex-1 px-6 py-4 text-center font-semibold transition-colors ${
+                activeTab === 'fundamentals'
+                  ? 'text-primary-600 border-b-2 border-primary-600 bg-primary-50 dark:bg-primary-900/20'
+                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+              }`}
+            >
+              Fundamentals
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Enhanced Chart - Always show when symbol exists */}
+      {symbol && activeTab === 'technical' && <EnhancedChart symbol={symbol} height={650} />}
+
+      {/* Technical Analysis Tab */}
+      {analysis && activeTab === 'technical' && (
         <>
           {/* Header */}
           <div className="card p-6">
@@ -238,6 +271,9 @@ export default function StockDetail() {
           )}
         </>
       )}
+
+      {/* Fundamentals Tab */}
+      {symbol && activeTab === 'fundamentals' && <FundamentalsTab symbol={symbol} />}
     </div>
   );
 }
