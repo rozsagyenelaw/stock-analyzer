@@ -150,7 +150,6 @@ export function calculateADX(data: CandleData[], period = 14): IndicatorResult[]
   for (let i = 1; i < data.length; i++) {
     const high = parseFloat(String(data[i].high));
     const low = parseFloat(String(data[i].low));
-    const close = parseFloat(String(data[i].close));
     const prevHigh = parseFloat(String(data[i - 1].high));
     const prevLow = parseFloat(String(data[i - 1].low));
     const prevClose = parseFloat(String(data[i - 1].close));
@@ -485,7 +484,6 @@ export function calculateKeltner(data: CandleData[], period = 20, multiplier = 2
   const upper: IndicatorResult[] = [];
   const lower: IndicatorResult[] = [];
 
-  const startIdx = data.length - Math.min(ema.length, atr.length);
   const emaSlice = ema.slice(ema.length - Math.min(ema.length, atr.length));
   const atrSlice = atr.slice(atr.length - Math.min(ema.length, atr.length));
 
@@ -1021,7 +1019,7 @@ export function calculatePPO(data: CandleData[], fastPeriod = 12, slowPeriod = 2
 /**
  * True Strength Index (TSI)
  */
-export function calculateTSI(data: CandleData[], longPeriod = 25, shortPeriod = 13, signalPeriod = 7) {
+export function calculateTSI(data: CandleData[], longPeriod = 25, shortPeriod = 13) {
   const result: IndicatorResult[] = [];
   const prices = data.map(d => parseFloat(String(d.close)));
   const momentum: number[] = [];
@@ -1511,7 +1509,6 @@ export function calculateVortex(data: CandleData[], period = 14) {
   for (let i = 1; i < data.length; i++) {
     const high = parseFloat(String(data[i].high));
     const low = parseFloat(String(data[i].low));
-    const close = parseFloat(String(data[i].close));
     const prevHigh = parseFloat(String(data[i - 1].high));
     const prevLow = parseFloat(String(data[i - 1].low));
     const prevClose = parseFloat(String(data[i - 1].close));

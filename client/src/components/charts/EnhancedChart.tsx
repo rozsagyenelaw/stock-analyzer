@@ -23,7 +23,6 @@ import {
 import toast from 'react-hot-toast';
 import html2canvas from 'html2canvas';
 import IndicatorSelector, { SelectedIndicator, AVAILABLE_INDICATORS } from './IndicatorSelector';
-import { useChartIndicators } from '@/hooks/useChartIndicators';
 
 interface EnhancedChartProps {
   symbol: string;
@@ -98,7 +97,6 @@ export default function EnhancedChart({ symbol, height = 600 }: EnhancedChartPro
   // Indicator selector state
   const [showIndicatorSelector, setShowIndicatorSelector] = useState(false);
   const [selectedIndicators, setSelectedIndicators] = useState<SelectedIndicator[]>([]);
-  const [indicatorPanelRefs, setIndicatorPanelRefs] = useState<Record<string, React.RefObject<HTMLDivElement>>>({});
 
   const [indicators, setIndicators] = useState({
     sma20: false,
