@@ -10,6 +10,7 @@ import Screener from './pages/Screener';
 import Portfolio from './pages/Portfolio';
 import Backtest from './pages/Backtest';
 import News from './pages/News';
+import Economy from './pages/Economy';
 import AITradeJournal from './pages/AITradeJournal';
 import EarningsAnalyzer from './pages/EarningsAnalyzer';
 import GreeksMonitor from './pages/GreeksMonitor';
@@ -29,6 +30,7 @@ function App() {
             <Route path="/portfolio" element={<Portfolio />} />
             <Route path="/backtest" element={<Backtest />} />
             <Route path="/news" element={<News />} />
+            <Route path="/economy" element={<Economy />} />
             <Route path="/journal" element={<Journal />} />
             <Route path="/alerts" element={<Alerts />} />
             <Route path="/settings" element={<Settings />} />

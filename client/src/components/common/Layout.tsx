@@ -32,6 +32,7 @@ export default function Layout({ children }: LayoutProps) {
     { name: 'Portfolio', href: '/portfolio', icon: PieChart },
     { name: 'Backtest', href: '/backtest', icon: BarChart3 },
     { name: 'News', href: '/news', icon: TrendingUp },
+    { name: 'Economy', href: '/economy', icon: Activity },
     { name: 'Journal', href: '/journal', icon: BookOpen },
     { name: 'Alerts', href: '/alerts', icon: Bell },
     { name: 'Settings', href: '/settings', icon: SettingsIcon },
