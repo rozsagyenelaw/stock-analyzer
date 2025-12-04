@@ -43,8 +43,7 @@ CREATE TABLE IF NOT EXISTS alerts (
 );
 
 -- Add ai_reasoning column to existing alerts table if not exists
--- This will not error if column already exists
-ALTER TABLE alerts ADD COLUMN ai_reasoning TEXT;
+-- SQLite doesn't support IF NOT EXISTS for ALTER TABLE, so we'll handle this in code if needed
 
 -- User settings
 CREATE TABLE IF NOT EXISTS settings (

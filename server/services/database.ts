@@ -37,6 +37,21 @@ export function initializeDatabase(): void {
   } else {
     console.log('Database already exists, skipping initialization');
   }
+
+  // Add ai_reasoning column to alerts table if it doesn't exist
+  try {
+    const columns = db.prepare("PRAGMA table_info(alerts)").all() as Array<{ name: string }>;
+    const hasAiReasoning = columns.some(col => col.name === 'ai_reasoning');
+
+    if (!hasAiReasoning) {
+      console.log('Adding ai_reasoning column to alerts table...');
+      db.exec('ALTER TABLE alerts ADD COLUMN ai_reasoning TEXT');
+      console.log('ai_reasoning column added successfully');
+    }
+  } catch (error) {
+    // Ignore if table doesn't exist yet or column already exists
+    console.log('Skipping ai_reasoning column migration');
+  }
 }
 
 // Initialize the database immediately
