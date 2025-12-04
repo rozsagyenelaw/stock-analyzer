@@ -169,4 +169,32 @@ export const settingsApi = {
   },
 };
 
+// Screener API
+export const screenerApi = {
+  getPrebuiltScans: async () => {
+    const response = await api.get('/screener/scans/prebuilt');
+    return response.data;
+  },
+
+  getCustomScans: async () => {
+    const response = await api.get('/screener/scans/custom');
+    return response.data;
+  },
+
+  saveCustomScan: async (scan: { name: string; description?: string; filters: any[] }) => {
+    const response = await api.post('/screener/scans/custom', scan);
+    return response.data;
+  },
+
+  deleteCustomScan: async (id: string) => {
+    const response = await api.delete(`/screener/scans/custom/${id}`);
+    return response.data;
+  },
+
+  runScan: async (filters: any[], symbols?: string[]) => {
+    const response = await api.post('/screener/run', { filters, symbols });
+    return response.data;
+  },
+};
+
 export default api;

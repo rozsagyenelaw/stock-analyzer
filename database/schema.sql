@@ -54,6 +54,15 @@ CREATE TABLE IF NOT EXISTS settings (
 -- Insert default settings
 INSERT OR IGNORE INTO settings (id) VALUES (1);
 
+-- Screener saved scans
+CREATE TABLE IF NOT EXISTS screener_scans (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name TEXT NOT NULL,
+  description TEXT,
+  filters TEXT NOT NULL, -- JSON array of filters
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
 -- Indexes for performance
 CREATE INDEX IF NOT EXISTS idx_trades_symbol ON trades(symbol);
 CREATE INDEX IF NOT EXISTS idx_trades_status ON trades(status);

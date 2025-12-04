@@ -165,3 +165,40 @@ export interface PositionSize {
   positionValue: number;
   maxLossDollars: number;
 }
+
+// Screener Types
+export type FilterOperator = 'gt' | 'lt' | 'eq' | 'gte' | 'lte' | 'between';
+
+export interface ScreenerFilter {
+  field: string;
+  operator: FilterOperator;
+  value: number | number[];
+  label?: string;
+}
+
+export interface ScreenerScan {
+  id?: string;
+  name: string;
+  description?: string;
+  filters: ScreenerFilter[];
+  isPrebuilt?: boolean;
+  created_at?: string;
+}
+
+export interface ScreenerResult {
+  symbol: string;
+  name: string;
+  price: number;
+  change: number;
+  changePercent: number;
+  volume: number;
+  marketCap?: number;
+  rsi?: number;
+  macd?: number;
+  sma20?: number;
+  sma50?: number;
+  sma200?: number;
+  peRatio?: number;
+  signal?: string;
+  score?: number;
+}

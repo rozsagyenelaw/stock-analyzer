@@ -15,6 +15,7 @@ import watchlistRouter from './routes/watchlist';
 import journalRouter from './routes/journal';
 import alertsRouter from './routes/alerts';
 import settingsRouter from './routes/settings';
+import screenerRouter from './routes/screener';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -25,6 +26,7 @@ app.use(helmet());
 // CORS configuration
 const allowedOrigins = [
   'http://localhost:5173',
+  'http://localhost:5174',
   'http://localhost:3000',
   process.env.CLIENT_URL,
 ].filter(Boolean);
@@ -80,6 +82,7 @@ app.use('/api/watchlist', watchlistRouter);
 app.use('/api/journal', journalRouter);
 app.use('/api/alerts', alertsRouter);
 app.use('/api/settings', settingsRouter);
+app.use('/api/screener', screenerRouter);
 
 // Error handling middleware
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {

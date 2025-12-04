@@ -7,6 +7,7 @@ import {
   Bell,
   Settings as SettingsIcon,
   Search,
+  Filter,
   Menu,
   X,
 } from 'lucide-react';
@@ -22,6 +23,7 @@ export default function Layout({ children }: LayoutProps) {
   const navigation = [
     { name: 'Dashboard', href: '/', icon: LayoutDashboard },
     { name: 'Search', href: '/search', icon: Search },
+    { name: 'Screener', href: '/screener', icon: Filter },
     { name: 'Journal', href: '/journal', icon: BookOpen },
     { name: 'Alerts', href: '/alerts', icon: Bell },
     { name: 'Settings', href: '/settings', icon: SettingsIcon },

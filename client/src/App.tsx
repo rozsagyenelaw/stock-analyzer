@@ -6,6 +6,7 @@ import Watchlist from './pages/Watchlist';
 import Journal from './pages/Journal';
 import Alerts from './pages/Alerts';
 import Settings from './pages/Settings';
+import Screener from './pages/Screener';
 import Layout from './components/common/Layout';
 
 function App() {
@@ -16,7 +17,9 @@ function App() {
           <Routes>
             <Route path="/" element={<Dashboard />} />
             <Route path="/stock/:symbol" element={<StockDetail />} />
+            <Route path="/stocks/:symbol" element={<StockDetail />} />
             <Route path="/watchlist" element={<Watchlist />} />
+            <Route path="/screener" element={<Screener />} />
             <Route path="/journal" element={<Journal />} />
             <Route path="/alerts" element={<Alerts />} />
             <Route path="/settings" element={<Settings />} />
