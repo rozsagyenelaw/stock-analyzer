@@ -7,6 +7,9 @@ import Journal from './pages/Journal';
 import Alerts from './pages/Alerts';
 import Settings from './pages/Settings';
 import Screener from './pages/Screener';
+import AITradeJournal from './pages/AITradeJournal';
+import EarningsAnalyzer from './pages/EarningsAnalyzer';
+import GreeksMonitor from './pages/GreeksMonitor';
 import Layout from './components/common/Layout';
 
 function App() {
@@ -23,6 +26,9 @@ function App() {
             <Route path="/journal" element={<Journal />} />
             <Route path="/alerts" element={<Alerts />} />
             <Route path="/settings" element={<Settings />} />
+            <Route path="/ai/trade-journal" element={<AITradeJournal />} />
+            <Route path="/ai/earnings" element={<EarningsAnalyzer />} />
+            <Route path="/ai/greeks" element={<GreeksMonitor />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </Layout>

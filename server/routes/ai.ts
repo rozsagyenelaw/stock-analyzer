@@ -31,6 +31,10 @@ import {
 import { getOptionsStrategyRecommendation } from '../services/ai/optionsStrategy';
 import { getEntryExitTiming } from '../services/ai/entryExitTiming';
 import { getRiskAssessment } from '../services/ai/riskAssessment';
+import { analyzeTradeHistory, getTradeRecommendation } from '../services/ai/tradeJournal';
+import { analyzeEarningsEvent, predictEarningsSurprise } from '../services/ai/earningsAnalyzer';
+import { analyzeGreeks, generateGreeksAlerts } from '../services/ai/greeksMonitor';
+import { tradeQueries } from '../services/database';
 
 const router = Router();
 
@@ -51,6 +55,9 @@ router.get('/status', (req, res) => {
       optionsStrategy: isOpenAIConfigured(), // Requires OpenAI
       entryExitTiming: isOpenAIConfigured(), // Requires OpenAI
       riskAssessment: isOpenAIConfigured(), // Requires OpenAI
+      tradeJournal: isOpenAIConfigured(), // Requires OpenAI
+      earningsAnalyzer: isOpenAIConfigured(), // Requires OpenAI
+      greeksMonitor: isOpenAIConfigured(), // Requires OpenAI
     },
   });
 });
@@ -612,6 +619,246 @@ router.post('/:symbol/risk-assessment', async (req, res) => {
   } catch (error: any) {
     console.error('Risk assessment error:', error);
     res.status(500).json({ error: 'Failed to get risk assessment', message: error.message });
+  }
+});
+
+/**
+ * GET /api/ai/trade-journal/analysis
+ * Analyze trade history and identify patterns
+ */
+router.get('/trade-journal/analysis', async (req, res) => {
+  try {
+    if (!isOpenAIConfigured()) {
+      return res.status(503).json({ error: 'OpenAI API not configured' });
+    }
+
+    // Get all trades from database
+    const trades = tradeQueries.getAll.all();
+
+    if (trades.length === 0) {
+      return res.json({
+        message: 'No trades found. Start logging trades to get AI analysis.',
+        summary: {
+          totalTrades: 0,
+          winningTrades: 0,
+          losingTrades: 0,
+          winRate: 0,
+          averageWin: 0,
+          averageLoss: 0,
+          profitFactor: 0,
+          totalProfitLoss: 0,
+          largestWin: 0,
+          largestLoss: 0,
+        },
+      });
+    }
+
+    const analysis = await analyzeTradeHistory(trades as Trade[]);
+
+    res.json({
+      ...analysis,
+      generatedAt: new Date().toISOString(),
+    });
+  } catch (error: any) {
+    console.error('Trade journal analysis error:', error);
+    res.status(500).json({ error: 'Failed to analyze trade history', message: error.message });
+  }
+});
+
+/**
+ * POST /api/ai/trade-journal/recommend
+ * Get recommendation for a proposed trade based on history
+ */
+router.post('/trade-journal/recommend', async (req, res) => {
+  try {
+    if (!isOpenAIConfigured()) {
+      return res.status(503).json({ error: 'OpenAI API not configured' });
+    }
+
+    const { symbol, direction, entryPrice, strategyTag } = req.body;
+
+    if (!symbol || !direction || !entryPrice) {
+      return res.status(400).json({
+        error: 'symbol, direction, and entryPrice are required'
+      });
+    }
+
+    const trades = tradeQueries.getAll.all();
+    const recommendation = await getTradeRecommendation(
+      { symbol: symbol.toUpperCase(), direction, entryPrice, strategyTag },
+      trades as Trade[]
+    );
+
+    res.json({
+      symbol: symbol.toUpperCase(),
+      ...recommendation,
+      generatedAt: new Date().toISOString(),
+    });
+  } catch (error: any) {
+    console.error('Trade recommendation error:', error);
+    res.status(500).json({ error: 'Failed to get trade recommendation', message: error.message });
+  }
+});
+
+/**
+ * POST /api/ai/:symbol/earnings-analysis
+ * Analyze earnings event for trading opportunities
+ */
+router.post('/:symbol/earnings-analysis', async (req, res) => {
+  try {
+    if (!isOpenAIConfigured()) {
+      return res.status(503).json({ error: 'OpenAI API not configured' });
+    }
+
+    const { symbol } = req.params;
+    const {
+      currentPrice,
+      earningsDate,
+      daysUntilEarnings,
+      currentIV,
+      historicalMoves,
+      optionsData,
+    } = req.body;
+
+    if (!currentPrice || !earningsDate || daysUntilEarnings === undefined || !currentIV) {
+      return res.status(400).json({
+        error: 'currentPrice, earningsDate, daysUntilEarnings, and currentIV are required'
+      });
+    }
+
+    const analysis = await analyzeEarningsEvent({
+      symbol: symbol.toUpperCase(),
+      currentPrice,
+      earningsDate,
+      daysUntilEarnings,
+      currentIV,
+      historicalMoves: historicalMoves || [],
+      optionsData,
+    });
+
+    res.json({
+      symbol: symbol.toUpperCase(),
+      ...analysis,
+      generatedAt: new Date().toISOString(),
+    });
+  } catch (error: any) {
+    console.error('Earnings analysis error:', error);
+    res.status(500).json({ error: 'Failed to analyze earnings event', message: error.message });
+  }
+});
+
+/**
+ * POST /api/ai/:symbol/earnings-surprise
+ * Predict earnings surprise probability
+ */
+router.post('/:symbol/earnings-surprise', async (req, res) => {
+  try {
+    if (!isOpenAIConfigured()) {
+      return res.status(503).json({ error: 'OpenAI API not configured' });
+    }
+
+    const { symbol } = req.params;
+    const { revenueGrowth, earnings, guidance } = req.body;
+
+    if (revenueGrowth === undefined || earnings === undefined) {
+      return res.status(400).json({
+        error: 'revenueGrowth and earnings are required'
+      });
+    }
+
+    const prediction = await predictEarningsSurprise(
+      symbol.toUpperCase(),
+      { revenueGrowth, earnings, guidance }
+    );
+
+    res.json({
+      symbol: symbol.toUpperCase(),
+      ...prediction,
+      generatedAt: new Date().toISOString(),
+    });
+  } catch (error: any) {
+    console.error('Earnings surprise prediction error:', error);
+    res.status(500).json({ error: 'Failed to predict earnings surprise', message: error.message });
+  }
+});
+
+/**
+ * POST /api/ai/greeks-analysis
+ * Analyze options Greeks and provide plain English explanation
+ */
+router.post('/greeks-analysis', async (req, res) => {
+  try {
+    if (!isOpenAIConfigured()) {
+      return res.status(503).json({ error: 'OpenAI API not configured' });
+    }
+
+    const {
+      position,
+      greeks,
+      underlyingPrice,
+      daysToExpiration,
+      impliedVolatility,
+    } = req.body;
+
+    if (!position || !greeks || !underlyingPrice || daysToExpiration === undefined || !impliedVolatility) {
+      return res.status(400).json({
+        error: 'position, greeks, underlyingPrice, daysToExpiration, and impliedVolatility are required'
+      });
+    }
+
+    const analysis = await analyzeGreeks({
+      position,
+      greeks,
+      underlyingPrice,
+      daysToExpiration,
+      impliedVolatility,
+    });
+
+    res.json({
+      ...analysis,
+      generatedAt: new Date().toISOString(),
+    });
+  } catch (error: any) {
+    console.error('Greeks analysis error:', error);
+    res.status(500).json({ error: 'Failed to analyze Greeks', message: error.message });
+  }
+});
+
+/**
+ * POST /api/ai/greeks-alerts
+ * Generate alerts for options position Greeks
+ */
+router.post('/greeks-alerts', async (req, res) => {
+  try {
+    const {
+      position,
+      greeks,
+      underlyingPrice,
+      daysToExpiration,
+      impliedVolatility,
+    } = req.body;
+
+    if (!position || !greeks || daysToExpiration === undefined || !impliedVolatility) {
+      return res.status(400).json({
+        error: 'position, greeks, daysToExpiration, and impliedVolatility are required'
+      });
+    }
+
+    const alerts = generateGreeksAlerts({
+      position,
+      greeks,
+      underlyingPrice,
+      daysToExpiration,
+      impliedVolatility,
+    });
+
+    res.json({
+      alerts,
+      generatedAt: new Date().toISOString(),
+    });
+  } catch (error: any) {
+    console.error('Greeks alerts error:', error);
+    res.status(500).json({ error: 'Failed to generate Greeks alerts', message: error.message });
   }
 });
 

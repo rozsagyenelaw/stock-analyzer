@@ -421,6 +421,106 @@ export const aiApi = {
     const response = await api.post(`/ai/${symbol}/risk-assessment`, data);
     return response.data;
   },
+
+  // Trade Journal
+  getTradeJournalAnalysis: async () => {
+    const response = await api.get('/ai/trade-journal/analysis');
+    return response.data;
+  },
+
+  getTradeRecommendation: async (proposedTrade: {
+    symbol: string;
+    direction: 'long' | 'short';
+    entryPrice: number;
+    strategyTag?: string;
+  }) => {
+    const response = await api.post('/ai/trade-journal/recommend', proposedTrade);
+    return response.data;
+  },
+
+  // Earnings Analyzer
+  getEarningsAnalysis: async (
+    symbol: string,
+    data: {
+      currentPrice: number;
+      earningsDate: string;
+      daysUntilEarnings: number;
+      currentIV: number;
+      historicalMoves: number[];
+      optionsData?: {
+        atmCallIV: number;
+        atmPutIV: number;
+        callVolume: number;
+        putVolume: number;
+      };
+    }
+  ) => {
+    const response = await api.post(`/ai/${symbol}/earnings-analysis`, data);
+    return response.data;
+  },
+
+  predictEarningsSurprise: async (
+    symbol: string,
+    recentPerformance: {
+      revenueGrowth: number;
+      earnings: number;
+      guidance?: string;
+    }
+  ) => {
+    const response = await api.post(`/ai/${symbol}/earnings-surprise`, recentPerformance);
+    return response.data;
+  },
+
+  // Greeks Monitor
+  getGreeksAnalysis: async (input: {
+    position: {
+      symbol: string;
+      type: 'call' | 'put';
+      strike: number;
+      expiration: string;
+      quantity: number;
+      entryPrice: number;
+      currentPrice: number;
+    };
+    greeks: {
+      delta: number;
+      gamma: number;
+      theta: number;
+      vega: number;
+      rho: number;
+    };
+    underlyingPrice: number;
+    daysToExpiration: number;
+    impliedVolatility: number;
+  }) => {
+    const response = await api.post('/ai/greeks-analysis', input);
+    return response.data;
+  },
+
+  getGreeksAlerts: async (input: {
+    position: {
+      symbol: string;
+      type: 'call' | 'put';
+      strike: number;
+      expiration: string;
+      quantity: number;
+      entryPrice: number;
+      currentPrice: number;
+    };
+    greeks: {
+      delta: number;
+      gamma: number;
+      theta: number;
+      vega: number;
+      rho: number;
+    };
+    underlyingPrice: number;
+    daysToExpiration: number;
+    impliedVolatility: number;
+  }) => {
+    const response = await api.post('/ai/greeks-alerts', input);
+    return response.data;
+  },
 };
 
 export default api;
