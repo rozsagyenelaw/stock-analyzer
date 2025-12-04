@@ -1,8 +1,15 @@
 import Database from 'better-sqlite3';
-import { readFileSync } from 'fs';
-import { join } from 'path';
+import { readFileSync, mkdirSync, existsSync } from 'fs';
+import { join, dirname } from 'path';
 
 const dbPath = process.env.DATABASE_URL || join(__dirname, '../../database/stockanalyzer.db');
+
+// Ensure the database directory exists
+const dbDir = dirname(dbPath);
+if (!existsSync(dbDir)) {
+  mkdirSync(dbDir, { recursive: true });
+}
+
 export const db = new Database(dbPath);
 
 // Enable foreign keys and WAL mode for better performance
