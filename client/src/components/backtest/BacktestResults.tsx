@@ -7,11 +7,10 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 
 interface BacktestResultsProps {
   runs: BacktestRun[];
-  onView: (run: BacktestRun) => void;
   onDelete: (id: string) => void;
 }
 
-export default function BacktestResults({ runs, onView, onDelete }: BacktestResultsProps) {
+export default function BacktestResults({ runs, onDelete }: BacktestResultsProps) {
   const [selectedRunId, setSelectedRunId] = useState<string | null>(null);
 
   const { data: selectedRun } = useQuery({

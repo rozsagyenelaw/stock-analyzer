@@ -102,7 +102,6 @@ export default function Backtest() {
       {selectedTab === 'results' && (
         <BacktestResults
           runs={runs}
-          onView={() => {}}
           onDelete={async (id) => {
             await backtestApi.deleteRun(id);
             refetchRuns();
