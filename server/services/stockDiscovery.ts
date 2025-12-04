@@ -129,21 +129,42 @@ export function initializeScans(): void {
   ];
 
   scans.forEach(scan => {
-    const id = uuidv4();
     try {
-      db.prepare(`
-        INSERT OR IGNORE INTO discovery_scans (id, scan_name, scan_type, description, criteria, is_active)
-        VALUES (?, ?, ?, ?, ?, ?)
-      `).run(
-        id,
-        scan.scan_name,
-        scan.scan_type,
-        scan.description,
-        JSON.stringify(scan.criteria),
-        scan.is_active ? 1 : 0
-      );
+      // Check if scan exists
+      const existing = db.prepare(`
+        SELECT id FROM discovery_scans WHERE scan_name = ?
+      `).get(scan.scan_name) as { id: string } | undefined;
+
+      if (existing) {
+        // Update existing scan with new criteria
+        db.prepare(`
+          UPDATE discovery_scans
+          SET scan_type = ?, description = ?, criteria = ?, is_active = ?
+          WHERE scan_name = ?
+        `).run(
+          scan.scan_type,
+          scan.description,
+          JSON.stringify(scan.criteria),
+          scan.is_active ? 1 : 0,
+          scan.scan_name
+        );
+      } else {
+        // Insert new scan
+        const id = uuidv4();
+        db.prepare(`
+          INSERT INTO discovery_scans (id, scan_name, scan_type, description, criteria, is_active)
+          VALUES (?, ?, ?, ?, ?, ?)
+        `).run(
+          id,
+          scan.scan_name,
+          scan.scan_type,
+          scan.description,
+          JSON.stringify(scan.criteria),
+          scan.is_active ? 1 : 0
+        );
+      }
     } catch (error) {
-      console.log(`Scan "${scan.scan_name}" already exists`);
+      console.log(`Error initializing scan "${scan.scan_name}":`, error);
     }
   });
 
