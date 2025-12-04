@@ -31,7 +31,7 @@ import {
 import { getOptionsStrategyRecommendation } from '../services/ai/optionsStrategy';
 import { getEntryExitTiming } from '../services/ai/entryExitTiming';
 import { getRiskAssessment } from '../services/ai/riskAssessment';
-import { analyzeTradeHistory, getTradeRecommendation } from '../services/ai/tradeJournal';
+import { analyzeTradeHistory, getTradeRecommendation, Trade } from '../services/ai/tradeJournal';
 import { analyzeEarningsEvent, predictEarningsSurprise } from '../services/ai/earningsAnalyzer';
 import { analyzeGreeks, generateGreeksAlerts } from '../services/ai/greeksMonitor';
 import { tradeQueries } from '../services/database';
