@@ -369,6 +369,58 @@ export const aiApi = {
     });
     return response.data;
   },
+
+  getOptionsStrategy: async (
+    symbol: string,
+    data: {
+      currentPrice: number;
+      outlook: 'bullish' | 'bearish' | 'neutral';
+      ivRank?: number;
+      ivPercentile?: number;
+      technicalAnalysis: any;
+      daysToEarnings?: number;
+      timeHorizon: '1week' | '1month' | '3months' | '6months';
+      riskTolerance: 'conservative' | 'moderate' | 'aggressive';
+    }
+  ) => {
+    const response = await api.post(`/ai/${symbol}/options-strategy`, data);
+    return response.data;
+  },
+
+  getEntryExitTiming: async (
+    symbol: string,
+    data: {
+      currentPrice: number;
+      technicalAnalysis: any;
+      sentiment?: any;
+      position?: 'none' | 'long' | 'short';
+      entryPrice?: number;
+      timeframe: '1D' | '1W' | '1M';
+    }
+  ) => {
+    const response = await api.post(`/ai/${symbol}/entry-exit-timing`, data);
+    return response.data;
+  },
+
+  getRiskAssessment: async (
+    symbol: string,
+    data: {
+      currentPrice: number;
+      stopLoss: number;
+      portfolioValue: number;
+      riskPerTrade: number;
+      technicalAnalysis: any;
+      existingPositions?: Array<{
+        symbol: string;
+        shares: number;
+        avgCost: number;
+      }>;
+      cashAvailable: number;
+    }
+  ) => {
+    const response = await api.post(`/ai/${symbol}/risk-assessment`, data);
+    return response.data;
+  },
 };
 
 export default api;

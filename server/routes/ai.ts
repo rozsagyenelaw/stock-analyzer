@@ -28,6 +28,9 @@ import {
   analyzeEarningsCall,
   isOpenAIConfigured,
 } from '../services/ai/openai';
+import { getOptionsStrategyRecommendation } from '../services/ai/optionsStrategy';
+import { getEntryExitTiming } from '../services/ai/entryExitTiming';
+import { getRiskAssessment } from '../services/ai/riskAssessment';
 
 const router = Router();
 
@@ -45,6 +48,9 @@ router.get('/status', (req, res) => {
       aiAnalysis: isOpenAIConfigured(), // Requires OpenAI
       tradingAssistant: isOpenAIConfigured(), // Requires OpenAI
       marketCommentary: isOpenAIConfigured(), // Requires OpenAI
+      optionsStrategy: isOpenAIConfigured(), // Requires OpenAI
+      entryExitTiming: isOpenAIConfigured(), // Requires OpenAI
+      riskAssessment: isOpenAIConfigured(), // Requires OpenAI
     },
   });
 });
@@ -459,6 +465,153 @@ router.get('/:symbol/comprehensive', async (req, res) => {
   } catch (error: any) {
     console.error('Comprehensive analysis error:', error);
     res.status(500).json({ error: 'Failed to generate comprehensive analysis', message: error.message });
+  }
+});
+
+/**
+ * POST /api/ai/:symbol/options-strategy
+ * Get AI options strategy recommendation (requires OpenAI)
+ */
+router.post('/:symbol/options-strategy', async (req, res) => {
+  try {
+    if (!isOpenAIConfigured()) {
+      return res.status(503).json({ error: 'OpenAI API not configured' });
+    }
+
+    const { symbol } = req.params;
+    const {
+      currentPrice,
+      outlook,
+      ivRank,
+      ivPercentile,
+      technicalAnalysis,
+      daysToEarnings,
+      timeHorizon,
+      riskTolerance,
+    } = req.body;
+
+    if (!currentPrice || !outlook || !technicalAnalysis || !timeHorizon || !riskTolerance) {
+      return res.status(400).json({
+        error: 'currentPrice, outlook, technicalAnalysis, timeHorizon, and riskTolerance are required'
+      });
+    }
+
+    const recommendation = await getOptionsStrategyRecommendation({
+      symbol: symbol.toUpperCase(),
+      currentPrice,
+      outlook,
+      ivRank,
+      ivPercentile,
+      technicalAnalysis,
+      daysToEarnings,
+      timeHorizon,
+      riskTolerance,
+    });
+
+    res.json({
+      symbol: symbol.toUpperCase(),
+      ...recommendation,
+      generatedAt: new Date().toISOString(),
+    });
+  } catch (error: any) {
+    console.error('Options strategy error:', error);
+    res.status(500).json({ error: 'Failed to get options strategy recommendation', message: error.message });
+  }
+});
+
+/**
+ * POST /api/ai/:symbol/entry-exit-timing
+ * Get AI entry/exit timing recommendation (requires OpenAI)
+ */
+router.post('/:symbol/entry-exit-timing', async (req, res) => {
+  try {
+    if (!isOpenAIConfigured()) {
+      return res.status(503).json({ error: 'OpenAI API not configured' });
+    }
+
+    const { symbol } = req.params;
+    const {
+      currentPrice,
+      technicalAnalysis,
+      sentiment,
+      position,
+      entryPrice,
+      timeframe,
+    } = req.body;
+
+    if (!currentPrice || !technicalAnalysis || !timeframe) {
+      return res.status(400).json({
+        error: 'currentPrice, technicalAnalysis, and timeframe are required'
+      });
+    }
+
+    const recommendation = await getEntryExitTiming({
+      symbol: symbol.toUpperCase(),
+      currentPrice,
+      technicalAnalysis,
+      sentiment,
+      position: position || 'none',
+      entryPrice,
+      timeframe,
+    });
+
+    res.json({
+      symbol: symbol.toUpperCase(),
+      ...recommendation,
+      generatedAt: new Date().toISOString(),
+    });
+  } catch (error: any) {
+    console.error('Entry/exit timing error:', error);
+    res.status(500).json({ error: 'Failed to get entry/exit timing recommendation', message: error.message });
+  }
+});
+
+/**
+ * POST /api/ai/:symbol/risk-assessment
+ * Get AI risk assessment and position sizing (requires OpenAI)
+ */
+router.post('/:symbol/risk-assessment', async (req, res) => {
+  try {
+    if (!isOpenAIConfigured()) {
+      return res.status(503).json({ error: 'OpenAI API not configured' });
+    }
+
+    const { symbol } = req.params;
+    const {
+      currentPrice,
+      stopLoss,
+      portfolioValue,
+      riskPerTrade,
+      technicalAnalysis,
+      existingPositions,
+      cashAvailable,
+    } = req.body;
+
+    if (!currentPrice || !stopLoss || !portfolioValue || !riskPerTrade || !technicalAnalysis || cashAvailable === undefined) {
+      return res.status(400).json({
+        error: 'currentPrice, stopLoss, portfolioValue, riskPerTrade, technicalAnalysis, and cashAvailable are required'
+      });
+    }
+
+    const assessment = await getRiskAssessment({
+      symbol: symbol.toUpperCase(),
+      currentPrice,
+      stopLoss,
+      portfolioValue,
+      riskPerTrade,
+      technicalAnalysis,
+      existingPositions: existingPositions || [],
+      cashAvailable,
+    });
+
+    res.json({
+      symbol: symbol.toUpperCase(),
+      ...assessment,
+      generatedAt: new Date().toISOString(),
+    });
+  } catch (error: any) {
+    console.error('Risk assessment error:', error);
+    res.status(500).json({ error: 'Failed to get risk assessment', message: error.message });
   }
 });
 

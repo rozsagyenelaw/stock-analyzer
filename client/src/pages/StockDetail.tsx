@@ -9,8 +9,11 @@ import FundamentalsTab from '@/components/fundamentals/FundamentalsTab';
 import OptionsTab from '@/components/options/OptionsTab';
 import AIAnalysisTab from '@/components/ai/AIAnalysisTab';
 import AIRecommendationCard from '@/components/ai/AIRecommendationCard';
+import OptionsStrategyCard from '@/components/ai/OptionsStrategyCard';
+import EntryExitTimingCard from '@/components/ai/EntryExitTimingCard';
+import RiskAssessmentCard from '@/components/ai/RiskAssessmentCard';
 
-type TabType = 'technical' | 'fundamentals' | 'options' | 'ai';
+type TabType = 'technical' | 'fundamentals' | 'options' | 'ai' | 'trading-assistant';
 
 export default function StockDetail() {
   const { symbol } = useParams<{ symbol: string }>();
@@ -127,6 +130,16 @@ export default function StockDetail() {
               }`}
             >
               AI Analysis
+            </button>
+            <button
+              onClick={() => setActiveTab('trading-assistant')}
+              className={`flex-1 px-6 py-4 text-center font-semibold transition-colors whitespace-nowrap ${
+                activeTab === 'trading-assistant'
+                  ? 'text-primary-600 border-b-2 border-primary-600 bg-primary-50 dark:bg-primary-900/20'
+                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+              }`}
+            >
+              Trading Assistant
             </button>
           </div>
         </div>
@@ -306,6 +319,15 @@ export default function StockDetail() {
 
       {/* AI Analysis Tab */}
       {symbol && activeTab === 'ai' && <AIAnalysisTab symbol={symbol} />}
+
+      {/* Trading Assistant Tab */}
+      {symbol && activeTab === 'trading-assistant' && (
+        <div className="space-y-6">
+          <OptionsStrategyCard symbol={symbol} />
+          <EntryExitTimingCard symbol={symbol} />
+          <RiskAssessmentCard symbol={symbol} />
+        </div>
+      )}
     </div>
   );
 }
