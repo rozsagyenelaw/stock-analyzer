@@ -14,6 +14,7 @@ import {
   Calendar,
   Activity,
   PieChart,
+  BarChart3,
 } from 'lucide-react';
 
 interface LayoutProps {
@@ -29,6 +30,7 @@ export default function Layout({ children }: LayoutProps) {
     { name: 'Search', href: '/search', icon: Search },
     { name: 'Screener', href: '/screener', icon: Filter },
     { name: 'Portfolio', href: '/portfolio', icon: PieChart },
+    { name: 'Backtest', href: '/backtest', icon: BarChart3 },
     { name: 'Journal', href: '/journal', icon: BookOpen },
     { name: 'Alerts', href: '/alerts', icon: Bell },
     { name: 'Settings', href: '/settings', icon: SettingsIcon },

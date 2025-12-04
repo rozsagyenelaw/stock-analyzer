@@ -655,3 +655,152 @@ export interface Portfolio {
   created_at: string;
   updated_at: string;
 }
+
+// ============================================================================
+// BACKTESTING TYPES
+// ============================================================================
+
+export type PositionSizing = 'FIXED' | 'PERCENT_CAPITAL' | 'KELLY' | 'VOLATILITY';
+export type OptimizationType = 'WALKFORWARD' | 'MONTE_CARLO';
+export type BacktestStatus = 'PENDING' | 'RUNNING' | 'COMPLETED' | 'FAILED';
+export type ExitReason = 'SIGNAL' | 'STOP_LOSS' | 'TAKE_PROFIT' | 'END_OF_DATA';
+
+export interface StrategyCondition {
+  indicator: string; // 'RSI', 'MACD', 'SMA', 'EMA', 'BB', 'STOCH', etc.
+  operator: string; // '>', '<', '>=', '<=', '==', 'CROSS_ABOVE', 'CROSS_BELOW'
+  value: number | string; // comparison value or another indicator
+  params?: { [key: string]: any }; // indicator parameters (e.g., { period: 14 })
+}
+
+export interface BacktestStrategy {
+  id: string;
+  name: string;
+  description?: string;
+  entry_rules: StrategyCondition[];
+  exit_rules: StrategyCondition[];
+  position_sizing: PositionSizing;
+  position_size_value: number;
+  stop_loss_percent?: number;
+  take_profit_percent?: number;
+  max_positions: number;
+  commission_percent: number;
+  slippage_percent: number;
+  initial_capital: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface BacktestTrade {
+  id: string;
+  backtest_run_id: string;
+  symbol: string;
+  direction: 'LONG' | 'SHORT';
+  entry_date: string;
+  entry_price: number;
+  exit_date?: string;
+  exit_price?: number;
+  shares: number;
+  position_size: number;
+  commission: number;
+  slippage: number;
+  stop_loss_price?: number;
+  take_profit_price?: number;
+  exit_reason?: ExitReason;
+  profit_loss?: number;
+  profit_loss_percent?: number;
+  mae?: number; // Maximum Adverse Excursion
+  mfe?: number; // Maximum Favorable Excursion
+  bars_in_trade?: number;
+  entry_signal?: { [key: string]: any };
+  exit_signal?: { [key: string]: any };
+}
+
+export interface EquityPoint {
+  date: string;
+  equity: number;
+  drawdown?: number;
+  drawdown_percent?: number;
+}
+
+export interface BacktestRun {
+  id: string;
+  strategy_id: string;
+  strategy?: BacktestStrategy;
+  name?: string;
+  symbol?: string;
+  start_date: string;
+  end_date: string;
+  timeframe: string;
+  optimization_type?: OptimizationType;
+  optimization_params?: { [key: string]: any };
+  status: BacktestStatus;
+
+  // Performance metrics
+  total_trades?: number;
+  winning_trades?: number;
+  losing_trades?: number;
+  total_return?: number;
+  total_return_percent?: number;
+  sharpe_ratio?: number;
+  max_drawdown?: number;
+  max_drawdown_percent?: number;
+  profit_factor?: number;
+  win_rate?: number;
+  avg_win?: number;
+  avg_loss?: number;
+  largest_win?: number;
+  largest_loss?: number;
+  avg_bars_in_trade?: number;
+  final_capital?: number;
+
+  // Data
+  equity_curve?: EquityPoint[];
+  monthly_returns?: { [month: string]: number };
+  trades?: BacktestTrade[];
+
+  error_message?: string;
+  created_at: string;
+  completed_at?: string;
+}
+
+export interface OptimizationWindow {
+  id: string;
+  backtest_run_id: string;
+  window_number?: number;
+  train_start_date: string;
+  train_end_date: string;
+  test_start_date?: string;
+  test_end_date?: string;
+  optimized_params: { [key: string]: any };
+  train_return?: number;
+  test_return?: number;
+  train_sharpe?: number;
+  test_sharpe?: number;
+  train_max_drawdown?: number;
+  test_max_drawdown?: number;
+  created_at: string;
+}
+
+export interface WalkForwardOptimizationParams {
+  train_window_months: number;
+  test_window_months: number;
+  parameter_ranges: {
+    [param: string]: {
+      min: number;
+      max: number;
+      step: number;
+    };
+  };
+  optimization_metric: 'SHARPE' | 'RETURN' | 'PROFIT_FACTOR' | 'WIN_RATE';
+}
+
+export interface BacktestRequest {
+  strategy_id: string;
+  name?: string;
+  symbol: string;
+  start_date: string;
+  end_date: string;
+  timeframe?: string;
+  optimization_type?: OptimizationType;
+  optimization_params?: WalkForwardOptimizationParams;
+}

@@ -564,4 +564,60 @@ export const portfolioApi = {
   },
 };
 
+// Backtest API
+export const backtestApi = {
+  // Strategies
+  getStrategies: async () => {
+    const response = await api.get('/backtest/strategies');
+    return response.data;
+  },
+
+  getStrategy: async (id: string) => {
+    const response = await api.get(`/backtest/strategies/${id}`);
+    return response.data;
+  },
+
+  createStrategy: async (data: any) => {
+    const response = await api.post('/backtest/strategies', data);
+    return response.data;
+  },
+
+  updateStrategy: async (id: string, data: any) => {
+    const response = await api.put(`/backtest/strategies/${id}`, data);
+    return response.data;
+  },
+
+  deleteStrategy: async (id: string) => {
+    const response = await api.delete(`/backtest/strategies/${id}`);
+    return response.data;
+  },
+
+  // Runs
+  getRuns: async () => {
+    const response = await api.get('/backtest/runs');
+    return response.data;
+  },
+
+  getRun: async (id: string) => {
+    const response = await api.get(`/backtest/runs/${id}`);
+    return response.data;
+  },
+
+  runBacktest: async (data: any) => {
+    const response = await api.post('/backtest/run', data);
+    return response.data;
+  },
+
+  deleteRun: async (id: string) => {
+    const response = await api.delete(`/backtest/runs/${id}`);
+    return response.data;
+  },
+
+  // Indicators
+  getIndicators: async () => {
+    const response = await api.get('/backtest/indicators');
+    return response.data;
+  },
+};
+
 export default api;
