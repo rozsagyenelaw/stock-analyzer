@@ -23,6 +23,12 @@ import {
 import toast from 'react-hot-toast';
 import html2canvas from 'html2canvas';
 import IndicatorSelector, { SelectedIndicator, AVAILABLE_INDICATORS } from './IndicatorSelector';
+import * as indicatorModule from '@/utils/technicalIndicators';
+
+// Helper function to convert indicator results to chart-compatible format
+const convertToChartData = (results: Array<{ time: number; value: number }>): LineData<Time>[] => {
+  return results.map(r => ({ time: r.time as Time, value: r.value }));
+};
 
 interface EnhancedChartProps {
   symbol: string;
@@ -727,86 +733,85 @@ export default function EnhancedChart({ symbol, height = 600 }: EnhancedChartPro
 
     overlayIndicators.forEach(indicator => {
       try {
-        const indicatorModule = require('@/utils/technicalIndicators');
         const params = indicator.params;
 
         switch (indicator.id) {
           case 'sma': {
             const result = indicatorModule.calculateSMA(data, params.period || 20);
-            chart.addLineSeries({ color: '#2196F3', lineWidth: 2, title: `SMA(${params.period || 20})` }).setData(result);
+            chart.addLineSeries({ color: '#2196F3', lineWidth: 2, title: `SMA(${params.period || 20})` }).setData(convertToChartData(result));
             break;
           }
           case 'ema': {
             const result = indicatorModule.calculateEMA(data, params.period || 20);
-            chart.addLineSeries({ color: '#FF9800', lineWidth: 2, title: `EMA(${params.period || 20})` }).setData(result);
+            chart.addLineSeries({ color: '#FF9800', lineWidth: 2, title: `EMA(${params.period || 20})` }).setData(convertToChartData(result));
             break;
           }
           case 'wma': {
             const result = indicatorModule.calculateWMA(data, params.period || 20);
-            chart.addLineSeries({ color: '#9C27B0', lineWidth: 2, title: `WMA(${params.period || 20})` }).setData(result);
+            chart.addLineSeries({ color: '#9C27B0', lineWidth: 2, title: `WMA(${params.period || 20})` }).setData(convertToChartData(result));
             break;
           }
           case 'dema': {
             const result = indicatorModule.calculateDEMA(data, params.period || 20);
-            chart.addLineSeries({ color: '#E91E63', lineWidth: 2, title: `DEMA(${params.period || 20})` }).setData(result);
+            chart.addLineSeries({ color: '#E91E63', lineWidth: 2, title: `DEMA(${params.period || 20})` }).setData(convertToChartData(result));
             break;
           }
           case 'tema': {
             const result = indicatorModule.calculateTEMA(data, params.period || 20);
-            chart.addLineSeries({ color: '#00BCD4', lineWidth: 2, title: `TEMA(${params.period || 20})` }).setData(result);
+            chart.addLineSeries({ color: '#00BCD4', lineWidth: 2, title: `TEMA(${params.period || 20})` }).setData(convertToChartData(result));
             break;
           }
           case 'hma': {
             const result = indicatorModule.calculateHMA(data, params.period || 20);
-            chart.addLineSeries({ color: '#CDDC39', lineWidth: 2, title: `HMA(${params.period || 20})` }).setData(result);
+            chart.addLineSeries({ color: '#CDDC39', lineWidth: 2, title: `HMA(${params.period || 20})` }).setData(convertToChartData(result));
             break;
           }
           case 'kama': {
             const result = indicatorModule.calculateKAMA(data, params.period || 10, params.fast || 2, params.slow || 30);
-            chart.addLineSeries({ color: '#FF5722', lineWidth: 2, title: `KAMA(${params.period || 10})` }).setData(result);
+            chart.addLineSeries({ color: '#FF5722', lineWidth: 2, title: `KAMA(${params.period || 10})` }).setData(convertToChartData(result));
             break;
           }
           case 'zlema': {
             const result = indicatorModule.calculateZLEMA(data, params.period || 20);
-            chart.addLineSeries({ color: '#795548', lineWidth: 2, title: `ZLEMA(${params.period || 20})` }).setData(result);
+            chart.addLineSeries({ color: '#795548', lineWidth: 2, title: `ZLEMA(${params.period || 20})` }).setData(convertToChartData(result));
             break;
           }
           case 'bollinger': {
             const result = indicatorModule.calculateBollingerBands(data, params.period || 20, params.stdDev || 2);
-            chart.addLineSeries({ color: 'rgba(33, 150, 243, 0.5)', lineWidth: 1, title: 'BB Upper' }).setData(result.upper);
-            chart.addLineSeries({ color: '#2196F3', lineWidth: 1, title: 'BB Middle' }).setData(result.middle);
-            chart.addLineSeries({ color: 'rgba(33, 150, 243, 0.5)', lineWidth: 1, title: 'BB Lower' }).setData(result.lower);
+            chart.addLineSeries({ color: 'rgba(33, 150, 243, 0.5)', lineWidth: 1, title: 'BB Upper' }).setData(convertToChartData(result.upper));
+            chart.addLineSeries({ color: '#2196F3', lineWidth: 1, title: 'BB Middle' }).setData(convertToChartData(result.middle));
+            chart.addLineSeries({ color: 'rgba(33, 150, 243, 0.5)', lineWidth: 1, title: 'BB Lower' }).setData(convertToChartData(result.lower));
             break;
           }
           case 'keltner': {
             const result = indicatorModule.calculateKeltner(data, params.period || 20, params.multiplier || 2);
-            chart.addLineSeries({ color: 'rgba(255, 152, 0, 0.5)', lineWidth: 1, title: 'Keltner Upper' }).setData(result.upper);
-            chart.addLineSeries({ color: '#FF9800', lineWidth: 1, title: 'Keltner Middle' }).setData(result.middle);
-            chart.addLineSeries({ color: 'rgba(255, 152, 0, 0.5)', lineWidth: 1, title: 'Keltner Lower' }).setData(result.lower);
+            chart.addLineSeries({ color: 'rgba(255, 152, 0, 0.5)', lineWidth: 1, title: 'Keltner Upper' }).setData(convertToChartData(result.upper));
+            chart.addLineSeries({ color: '#FF9800', lineWidth: 1, title: 'Keltner Middle' }).setData(convertToChartData(result.middle));
+            chart.addLineSeries({ color: 'rgba(255, 152, 0, 0.5)', lineWidth: 1, title: 'Keltner Lower' }).setData(convertToChartData(result.lower));
             break;
           }
           case 'donchian': {
             const result = indicatorModule.calculateDonchian(data, params.period || 20);
-            chart.addLineSeries({ color: 'rgba(76, 175, 80, 0.5)', lineWidth: 1, title: 'Donchian Upper' }).setData(result.upper);
-            chart.addLineSeries({ color: '#4CAF50', lineWidth: 1, title: 'Donchian Middle' }).setData(result.middle);
-            chart.addLineSeries({ color: 'rgba(76, 175, 80, 0.5)', lineWidth: 1, title: 'Donchian Lower' }).setData(result.lower);
+            chart.addLineSeries({ color: 'rgba(76, 175, 80, 0.5)', lineWidth: 1, title: 'Donchian Upper' }).setData(convertToChartData(result.upper));
+            chart.addLineSeries({ color: '#4CAF50', lineWidth: 1, title: 'Donchian Middle' }).setData(convertToChartData(result.middle));
+            chart.addLineSeries({ color: 'rgba(76, 175, 80, 0.5)', lineWidth: 1, title: 'Donchian Lower' }).setData(convertToChartData(result.lower));
             break;
           }
           case 'envelopes': {
             const result = indicatorModule.calculateEnvelopes(data, params.period || 20, params.percent || 2.5);
-            chart.addLineSeries({ color: 'rgba(156, 39, 176, 0.5)', lineWidth: 1, title: 'Envelope Upper' }).setData(result.upper);
-            chart.addLineSeries({ color: '#9C27B0', lineWidth: 1, title: 'Envelope Middle' }).setData(result.middle);
-            chart.addLineSeries({ color: 'rgba(156, 39, 176, 0.5)', lineWidth: 1, title: 'Envelope Lower' }).setData(result.lower);
+            chart.addLineSeries({ color: 'rgba(156, 39, 176, 0.5)', lineWidth: 1, title: 'Envelope Upper' }).setData(convertToChartData(result.upper));
+            chart.addLineSeries({ color: '#9C27B0', lineWidth: 1, title: 'Envelope Middle' }).setData(convertToChartData(result.middle));
+            chart.addLineSeries({ color: 'rgba(156, 39, 176, 0.5)', lineWidth: 1, title: 'Envelope Lower' }).setData(convertToChartData(result.lower));
             break;
           }
           case 'sar': {
             const result = indicatorModule.calculateParabolicSAR(data, params.acceleration || 0.02, params.maximum || 0.2);
-            chart.addLineSeries({ color: '#F44336', lineWidth: 1, lineStyle: 3, title: 'SAR' }).setData(result);
+            chart.addLineSeries({ color: '#F44336', lineWidth: 1, lineStyle: 3, title: 'SAR' }).setData(convertToChartData(result));
             break;
           }
           case 'vwap': {
             const result = indicatorModule.calculateVWAP(data);
-            chart.addLineSeries({ color: '#673AB7', lineWidth: 2, title: 'VWAP' }).setData(result);
+            chart.addLineSeries({ color: '#673AB7', lineWidth: 2, title: 'VWAP' }).setData(convertToChartData(result));
             break;
           }
         }
