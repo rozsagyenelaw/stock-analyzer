@@ -14,7 +14,7 @@ import {
   analyzeSectorAllocation,
   generateDiversificationRecommendations
 } from '../services/portfolioAnalytics';
-import { fetchQuote, fetchTimeSeries } from '../services/twelvedata';
+import { getQuote, getTimeSeries } from '../services/twelveData';
 
 const router = Router();
 
@@ -144,7 +144,7 @@ router.post('/:id/transaction', async (req, res) => {
     // Get stock name
     let stockName = symbol;
     try {
-      const quote = await fetchQuote(symbol);
+      const quote = await getQuote(symbol);
       stockName = quote.name || symbol;
     } catch (e) {
       console.warn(`Could not fetch name for ${symbol}`);
@@ -267,7 +267,7 @@ async function enrichHoldingsWithPrices(holdings: any[]) {
 
   for (const holding of holdings) {
     try {
-      const quote = await fetchQuote(holding.symbol);
+      const quote = await getQuote(holding.symbol);
       const currentPrice = quote.price || holding.avg_cost;
       const marketValue = holding.shares * currentPrice;
       const costBasis = holding.shares * holding.avg_cost;
@@ -348,7 +348,7 @@ async function calculateRiskMetrics(holdings: any[]) {
 
   for (const symbol of symbols) {
     try {
-      const timeseries = await fetchTimeSeries(symbol, '1day', 100);
+      const timeseries = await getTimeSeries(symbol, '1day', 100);
       if (timeseries && timeseries.values) {
         priceHistories[symbol] = timeseries.values.map((v: any) => parseFloat(v.close));
       }
