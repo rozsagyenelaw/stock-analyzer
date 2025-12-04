@@ -17,9 +17,13 @@ import {
   Palette,
   Grid3x3,
   Plus as PlusIcon,
+  TrendingUp,
+  X,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import html2canvas from 'html2canvas';
+import IndicatorSelector, { SelectedIndicator, AVAILABLE_INDICATORS } from './IndicatorSelector';
+import { useChartIndicators } from '@/hooks/useChartIndicators';
 
 interface EnhancedChartProps {
   symbol: string;
@@ -90,6 +94,11 @@ export default function EnhancedChart({ symbol, height = 600 }: EnhancedChartPro
   const [showGrid, setShowGrid] = useState(true);
   const [drawingPoints, setDrawingPoints] = useState<Array<{ time: number; price: number }>>([]);
   const [drawnLines, setDrawnLines] = useState<DrawingLine[]>([]);
+
+  // Indicator selector state
+  const [showIndicatorSelector, setShowIndicatorSelector] = useState(false);
+  const [selectedIndicators, setSelectedIndicators] = useState<SelectedIndicator[]>([]);
+  const [indicatorPanelRefs, setIndicatorPanelRefs] = useState<Record<string, React.RefObject<HTMLDivElement>>>({});
 
   const [indicators, setIndicators] = useState({
     sma20: false,
@@ -533,6 +542,27 @@ export default function EnhancedChart({ symbol, height = 600 }: EnhancedChartPro
     }
   }, [activeTool, drawingPoints, mainSeriesRef]);
 
+  // Indicator selector handlers
+  const handleToggleIndicator = useCallback((indicatorId: string, params?: Record<string, number>) => {
+    setSelectedIndicators(prev => {
+      const exists = prev.find(ind => ind.id === indicatorId);
+      if (exists) {
+        // Remove indicator
+        return prev.filter(ind => ind.id !== indicatorId);
+      } else {
+        // Add indicator
+        const indicator = AVAILABLE_INDICATORS.find(ind => ind.id === indicatorId);
+        return [...prev, { id: indicatorId, params: params || {}, panel: indicator?.hasPanel }];
+      }
+    });
+  }, []);
+
+  const handleUpdateIndicatorParams = useCallback((indicatorId: string, params: Record<string, number>) => {
+    setSelectedIndicators(prev =>
+      prev.map(ind => ind.id === indicatorId ? { ...ind, params } : ind)
+    );
+  }, []);
+
   // Load saved templates on mount
   useEffect(() => {
     const saved = localStorage.getItem(`chart-templates-${symbol}`);
@@ -691,6 +721,102 @@ export default function EnhancedChart({ symbol, height = 600 }: EnhancedChartPro
       chart.addLineSeries({ color: 'rgba(156, 39, 176, 0.5)', lineWidth: 1 }).setData(bb.lower);
     }
 
+    // Render selected indicators from the new selector
+    const overlayIndicators = selectedIndicators.filter(ind => {
+      const config = AVAILABLE_INDICATORS.find(a => a.id === ind.id);
+      return config && !config.hasPanel;
+    });
+
+    overlayIndicators.forEach(indicator => {
+      try {
+        const indicatorModule = require('@/utils/technicalIndicators');
+        const params = indicator.params;
+
+        switch (indicator.id) {
+          case 'sma': {
+            const result = indicatorModule.calculateSMA(data, params.period || 20);
+            chart.addLineSeries({ color: '#2196F3', lineWidth: 2, title: `SMA(${params.period || 20})` }).setData(result);
+            break;
+          }
+          case 'ema': {
+            const result = indicatorModule.calculateEMA(data, params.period || 20);
+            chart.addLineSeries({ color: '#FF9800', lineWidth: 2, title: `EMA(${params.period || 20})` }).setData(result);
+            break;
+          }
+          case 'wma': {
+            const result = indicatorModule.calculateWMA(data, params.period || 20);
+            chart.addLineSeries({ color: '#9C27B0', lineWidth: 2, title: `WMA(${params.period || 20})` }).setData(result);
+            break;
+          }
+          case 'dema': {
+            const result = indicatorModule.calculateDEMA(data, params.period || 20);
+            chart.addLineSeries({ color: '#E91E63', lineWidth: 2, title: `DEMA(${params.period || 20})` }).setData(result);
+            break;
+          }
+          case 'tema': {
+            const result = indicatorModule.calculateTEMA(data, params.period || 20);
+            chart.addLineSeries({ color: '#00BCD4', lineWidth: 2, title: `TEMA(${params.period || 20})` }).setData(result);
+            break;
+          }
+          case 'hma': {
+            const result = indicatorModule.calculateHMA(data, params.period || 20);
+            chart.addLineSeries({ color: '#CDDC39', lineWidth: 2, title: `HMA(${params.period || 20})` }).setData(result);
+            break;
+          }
+          case 'kama': {
+            const result = indicatorModule.calculateKAMA(data, params.period || 10, params.fast || 2, params.slow || 30);
+            chart.addLineSeries({ color: '#FF5722', lineWidth: 2, title: `KAMA(${params.period || 10})` }).setData(result);
+            break;
+          }
+          case 'zlema': {
+            const result = indicatorModule.calculateZLEMA(data, params.period || 20);
+            chart.addLineSeries({ color: '#795548', lineWidth: 2, title: `ZLEMA(${params.period || 20})` }).setData(result);
+            break;
+          }
+          case 'bollinger': {
+            const result = indicatorModule.calculateBollingerBands(data, params.period || 20, params.stdDev || 2);
+            chart.addLineSeries({ color: 'rgba(33, 150, 243, 0.5)', lineWidth: 1, title: 'BB Upper' }).setData(result.upper);
+            chart.addLineSeries({ color: '#2196F3', lineWidth: 1, title: 'BB Middle' }).setData(result.middle);
+            chart.addLineSeries({ color: 'rgba(33, 150, 243, 0.5)', lineWidth: 1, title: 'BB Lower' }).setData(result.lower);
+            break;
+          }
+          case 'keltner': {
+            const result = indicatorModule.calculateKeltner(data, params.period || 20, params.multiplier || 2);
+            chart.addLineSeries({ color: 'rgba(255, 152, 0, 0.5)', lineWidth: 1, title: 'Keltner Upper' }).setData(result.upper);
+            chart.addLineSeries({ color: '#FF9800', lineWidth: 1, title: 'Keltner Middle' }).setData(result.middle);
+            chart.addLineSeries({ color: 'rgba(255, 152, 0, 0.5)', lineWidth: 1, title: 'Keltner Lower' }).setData(result.lower);
+            break;
+          }
+          case 'donchian': {
+            const result = indicatorModule.calculateDonchian(data, params.period || 20);
+            chart.addLineSeries({ color: 'rgba(76, 175, 80, 0.5)', lineWidth: 1, title: 'Donchian Upper' }).setData(result.upper);
+            chart.addLineSeries({ color: '#4CAF50', lineWidth: 1, title: 'Donchian Middle' }).setData(result.middle);
+            chart.addLineSeries({ color: 'rgba(76, 175, 80, 0.5)', lineWidth: 1, title: 'Donchian Lower' }).setData(result.lower);
+            break;
+          }
+          case 'envelopes': {
+            const result = indicatorModule.calculateEnvelopes(data, params.period || 20, params.percent || 2.5);
+            chart.addLineSeries({ color: 'rgba(156, 39, 176, 0.5)', lineWidth: 1, title: 'Envelope Upper' }).setData(result.upper);
+            chart.addLineSeries({ color: '#9C27B0', lineWidth: 1, title: 'Envelope Middle' }).setData(result.middle);
+            chart.addLineSeries({ color: 'rgba(156, 39, 176, 0.5)', lineWidth: 1, title: 'Envelope Lower' }).setData(result.lower);
+            break;
+          }
+          case 'sar': {
+            const result = indicatorModule.calculateParabolicSAR(data, params.acceleration || 0.02, params.maximum || 0.2);
+            chart.addLineSeries({ color: '#F44336', lineWidth: 1, lineStyle: 3, title: 'SAR' }).setData(result);
+            break;
+          }
+          case 'vwap': {
+            const result = indicatorModule.calculateVWAP(data);
+            chart.addLineSeries({ color: '#673AB7', lineWidth: 2, title: 'VWAP' }).setData(result);
+            break;
+          }
+        }
+      } catch (error) {
+        console.error(`Error rendering indicator ${indicator.id}:`, error);
+      }
+    });
+
     // Add comparison symbols
     const comparisonColors = ['#ff6b6b', '#4ecdc4', '#45b7d1', '#f7b731', '#5f27cd'];
     comparisonQueries.forEach((query, index) => {
@@ -783,6 +909,7 @@ export default function EnhancedChart({ symbol, height = 600 }: EnhancedChartPro
     showGrid,
     drawnLines,
     comparisonQueries,
+    selectedIndicators,
     handleChartClick,
     formatCandlestickData,
     formatLineData,
@@ -1028,6 +1155,13 @@ export default function EnhancedChart({ symbol, height = 600 }: EnhancedChartPro
 
             <div className="border-l pl-4 border-gray-300 dark:border-gray-600 flex gap-2">
               <button
+                onClick={() => setShowIndicatorSelector(true)}
+                className="flex items-center gap-1 px-3 py-1 text-sm bg-purple-600 text-white rounded hover:bg-purple-700"
+              >
+                <TrendingUp className="w-4 h-4" />
+                Indicators ({selectedIndicators.length})
+              </button>
+              <button
                 onClick={() => setShowMACD(!showMACD)}
                 className={`px-3 py-1 text-sm rounded ${
                   showMACD ? 'bg-primary-600 text-white' : 'bg-gray-200 dark:bg-gray-700'
@@ -1208,6 +1342,38 @@ export default function EnhancedChart({ symbol, height = 600 }: EnhancedChartPro
                 {template.name}
               </button>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* Indicator Selector Modal */}
+      {showIndicatorSelector && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[80vh] flex flex-col">
+            <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+              <h2 className="text-xl font-bold">Technical Indicators</h2>
+              <button
+                onClick={() => setShowIndicatorSelector(false)}
+                className="p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="p-4 overflow-y-auto flex-1">
+              <IndicatorSelector
+                selectedIndicators={selectedIndicators}
+                onToggleIndicator={handleToggleIndicator}
+                onUpdateParams={handleUpdateIndicatorParams}
+              />
+            </div>
+            <div className="p-4 border-t border-gray-200 dark:border-gray-700">
+              <button
+                onClick={() => setShowIndicatorSelector(false)}
+                className="btn btn-primary w-full"
+              >
+                Done
+              </button>
+            </div>
           </div>
         </div>
       )}
