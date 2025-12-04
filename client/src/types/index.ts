@@ -904,3 +904,98 @@ export interface SentimentSummary {
   };
   history: SentimentMetrics[];
 }
+
+// ============================================================================
+// ECONOMIC CALENDAR & MACRO ANALYSIS TYPES
+// ============================================================================
+
+export type EventImpact = 'LOW' | 'MEDIUM' | 'HIGH';
+export type EventType = 'EARNINGS' | 'FED_MEETING' | 'GDP' | 'UNEMPLOYMENT' | 'INFLATION' | 'RETAIL_SALES' | 'PMI' | 'CPI' | 'PPI' | 'JOBLESS_CLAIMS' | 'HOUSING' | 'OTHER';
+export type MarketRegime = 'BULL' | 'BEAR' | 'SIDEWAYS' | 'VOLATILE';
+export type RotationSignal = 'ROTATE_IN' | 'ROTATE_OUT' | 'HOLD';
+
+export interface EconomicEvent {
+  id: string;
+  event_name: string;
+  event_type: EventType;
+  country: string;
+  impact: EventImpact;
+  actual_value?: string;
+  forecast_value?: string;
+  previous_value?: string;
+  event_date: string;
+  event_time?: string;
+  description?: string;
+  source?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface MacroIndicator {
+  id: string;
+  indicator_name: string;
+  indicator_type: string;
+  value: number;
+  period: string;
+  date: string;
+  previous_value?: number;
+  change_percent?: number;
+  unit?: string;
+  source: string;
+  created_at: string;
+}
+
+export interface SectorPerformance {
+  id: string;
+  sector: string;
+  date: string;
+  timeframe: 'daily' | 'weekly' | 'monthly' | 'ytd';
+  price_change: number;
+  price_change_percent: number;
+  volume?: number;
+  market_cap?: number;
+  pe_ratio?: number;
+  dividend_yield?: number;
+  momentum_score?: number;
+  rotation_signal?: RotationSignal;
+  top_performers?: string[];
+  bottom_performers?: string[];
+  created_at: string;
+}
+
+export interface SectorCorrelation {
+  id: string;
+  sector_a: string;
+  sector_b: string;
+  correlation: number;
+  period_days: number;
+  date: string;
+  created_at: string;
+}
+
+export interface MarketRegimeData {
+  id: string;
+  date: string;
+  regime: MarketRegime;
+  volatility_index?: number;
+  trend_strength?: number;
+  market_breadth?: number;
+  leading_sectors?: string[];
+  lagging_sectors?: string[];
+  risk_on_score?: number;
+  description?: string;
+  created_at: string;
+}
+
+export interface SectorRotationAnalysis {
+  date: string;
+  sectors: SectorPerformance[];
+  market_regime: MarketRegimeData;
+  rotation_opportunities: {
+    sector: string;
+    signal: RotationSignal;
+    momentum: number;
+    reason: string;
+  }[];
+  correlations: SectorCorrelation[];
+}

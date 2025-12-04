@@ -316,3 +316,91 @@ CREATE INDEX IF NOT EXISTS idx_sentiment_symbol_date ON sentiment_metrics(symbol
 CREATE INDEX IF NOT EXISTS idx_sentiment_source ON sentiment_metrics(source);
 CREATE INDEX IF NOT EXISTS idx_trending_date ON trending_symbols(date DESC, rank);
 CREATE INDEX IF NOT EXISTS idx_trending_source ON trending_symbols(source);
+
+-- Economic Calendar & Macro Analysis
+CREATE TABLE IF NOT EXISTS economic_events (
+  id TEXT PRIMARY KEY,
+  event_name TEXT NOT NULL,
+  event_type TEXT NOT NULL, -- EARNINGS, FED_MEETING, GDP, UNEMPLOYMENT, INFLATION, etc.
+  country TEXT NOT NULL DEFAULT 'US',
+  impact TEXT NOT NULL CHECK(impact IN ('LOW', 'MEDIUM', 'HIGH')),
+  actual_value TEXT,
+  forecast_value TEXT,
+  previous_value TEXT,
+  event_date TEXT NOT NULL,
+  event_time TEXT,
+  description TEXT,
+  source TEXT,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE TABLE IF NOT EXISTS macro_indicators (
+  id TEXT PRIMARY KEY,
+  indicator_name TEXT NOT NULL, -- GDP, UNEMPLOYMENT_RATE, INFLATION_RATE, etc.
+  indicator_type TEXT NOT NULL, -- GROWTH, EMPLOYMENT, INFLATION, RATES, etc.
+  value REAL NOT NULL,
+  period TEXT NOT NULL, -- YYYY-MM or YYYY-QX
+  date TEXT NOT NULL,
+  previous_value REAL,
+  change_percent REAL,
+  unit TEXT, -- PERCENT, BILLION_USD, etc.
+  source TEXT NOT NULL DEFAULT 'FRED',
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  UNIQUE(indicator_name, period)
+);
+
+CREATE TABLE IF NOT EXISTS sector_performance (
+  id TEXT PRIMARY KEY,
+  sector TEXT NOT NULL, -- Technology, Healthcare, Financials, etc.
+  date TEXT NOT NULL,
+  timeframe TEXT NOT NULL DEFAULT 'daily', -- daily, weekly, monthly, ytd
+  price_change REAL NOT NULL,
+  price_change_percent REAL NOT NULL,
+  volume REAL,
+  market_cap REAL,
+  pe_ratio REAL,
+  dividend_yield REAL,
+  momentum_score REAL, -- 0-100 relative strength
+  rotation_signal TEXT, -- ROTATE_IN, ROTATE_OUT, HOLD
+  top_performers TEXT, -- JSON array of top stocks
+  bottom_performers TEXT, -- JSON array of worst stocks
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  UNIQUE(sector, date, timeframe)
+);
+
+CREATE TABLE IF NOT EXISTS sector_correlations (
+  id TEXT PRIMARY KEY,
+  sector_a TEXT NOT NULL,
+  sector_b TEXT NOT NULL,
+  correlation REAL NOT NULL, -- -1 to 1
+  period_days INTEGER NOT NULL DEFAULT 90,
+  date TEXT NOT NULL,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  UNIQUE(sector_a, sector_b, period_days, date)
+);
+
+CREATE TABLE IF NOT EXISTS market_regime (
+  id TEXT PRIMARY KEY,
+  date TEXT NOT NULL UNIQUE,
+  regime TEXT NOT NULL, -- BULL, BEAR, SIDEWAYS, VOLATILE
+  volatility_index REAL,
+  trend_strength REAL,
+  market_breadth REAL,
+  leading_sectors TEXT, -- JSON array
+  lagging_sectors TEXT, -- JSON array
+  risk_on_score REAL, -- 0-100, higher = more risk-on
+  description TEXT,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+-- Indexes for performance
+CREATE INDEX IF NOT EXISTS idx_economic_events_date ON economic_events(event_date DESC);
+CREATE INDEX IF NOT EXISTS idx_economic_events_type ON economic_events(event_type);
+CREATE INDEX IF NOT EXISTS idx_economic_events_impact ON economic_events(impact);
+CREATE INDEX IF NOT EXISTS idx_macro_indicators_name ON macro_indicators(indicator_name);
+CREATE INDEX IF NOT EXISTS idx_macro_indicators_date ON macro_indicators(date DESC);
+CREATE INDEX IF NOT EXISTS idx_sector_performance_sector ON sector_performance(sector);
+CREATE INDEX IF NOT EXISTS idx_sector_performance_date ON sector_performance(date DESC, timeframe);
+CREATE INDEX IF NOT EXISTS idx_sector_correlations_date ON sector_correlations(date DESC);
+CREATE INDEX IF NOT EXISTS idx_market_regime_date ON market_regime(date DESC);
