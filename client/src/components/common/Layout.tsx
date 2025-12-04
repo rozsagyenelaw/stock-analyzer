@@ -15,6 +15,7 @@ import {
   Activity,
   PieChart,
   BarChart3,
+  Sparkles,
 } from 'lucide-react';
 
 interface LayoutProps {
@@ -27,6 +28,7 @@ export default function Layout({ children }: LayoutProps) {
 
   const navigation = [
     { name: 'Dashboard', href: '/', icon: LayoutDashboard },
+    { name: 'Discover', href: '/discover', icon: Sparkles },
     { name: 'Search', href: '/search', icon: Search },
     { name: 'Screener', href: '/screener', icon: Filter },
     { name: 'Portfolio', href: '/portfolio', icon: PieChart },

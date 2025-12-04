@@ -404,3 +404,79 @@ CREATE INDEX IF NOT EXISTS idx_sector_performance_sector ON sector_performance(s
 CREATE INDEX IF NOT EXISTS idx_sector_performance_date ON sector_performance(date DESC, timeframe);
 CREATE INDEX IF NOT EXISTS idx_sector_correlations_date ON sector_correlations(date DESC);
 CREATE INDEX IF NOT EXISTS idx_market_regime_date ON market_regime(date DESC);
+
+-- ==================== STOCK DISCOVERY ====================
+
+-- Stock Universe (S&P 500 + popular stocks)
+CREATE TABLE IF NOT EXISTS stock_universe (
+  symbol TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  sector TEXT,
+  industry TEXT,
+  market_cap REAL,
+  is_sp500 INTEGER DEFAULT 0,
+  is_active INTEGER DEFAULT 1,
+  last_updated TEXT DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Discovery Scans (pre-built strategies)
+CREATE TABLE IF NOT EXISTS discovery_scans (
+  id TEXT PRIMARY KEY,
+  scan_name TEXT NOT NULL UNIQUE,
+  scan_type TEXT NOT NULL,
+  description TEXT,
+  criteria TEXT NOT NULL, -- JSON of scan criteria
+  is_active INTEGER DEFAULT 1,
+  created_at TEXT DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Scan Results (cached opportunities)
+CREATE TABLE IF NOT EXISTS scan_results (
+  id TEXT PRIMARY KEY,
+  scan_id TEXT NOT NULL,
+  symbol TEXT NOT NULL,
+  score REAL NOT NULL,
+  rank INTEGER,
+  data TEXT, -- JSON of metrics that triggered the scan
+  ai_analysis TEXT, -- AI-generated summary
+  ai_risks TEXT, -- AI-identified risks
+  ai_entry_exit TEXT, -- AI-suggested entry/exit
+  scanned_at TEXT DEFAULT CURRENT_TIMESTAMP,
+  expires_at TEXT NOT NULL,
+  FOREIGN KEY (scan_id) REFERENCES discovery_scans(id) ON DELETE CASCADE,
+  FOREIGN KEY (symbol) REFERENCES stock_universe(symbol)
+);
+
+-- Scan Execution Log
+CREATE TABLE IF NOT EXISTS scan_executions (
+  id TEXT PRIMARY KEY,
+  scan_id TEXT NOT NULL,
+  executed_at TEXT DEFAULT CURRENT_TIMESTAMP,
+  stocks_scanned INTEGER,
+  opportunities_found INTEGER,
+  execution_time_ms INTEGER,
+  status TEXT CHECK(status IN ('SUCCESS', 'FAILED', 'PARTIAL')),
+  error_message TEXT,
+  FOREIGN KEY (scan_id) REFERENCES discovery_scans(id) ON DELETE CASCADE
+);
+
+-- User Scan Preferences (for personalization)
+CREATE TABLE IF NOT EXISTS user_scan_preferences (
+  id TEXT PRIMARY KEY,
+  user_id TEXT, -- For future auth
+  scan_id TEXT NOT NULL,
+  is_enabled INTEGER DEFAULT 1,
+  notification_enabled INTEGER DEFAULT 0,
+  min_score REAL DEFAULT 0,
+  created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (scan_id) REFERENCES discovery_scans(id) ON DELETE CASCADE
+);
+
+-- Indexes for Stock Discovery
+CREATE INDEX IF NOT EXISTS idx_stock_universe_sector ON stock_universe(sector);
+CREATE INDEX IF NOT EXISTS idx_stock_universe_active ON stock_universe(is_active, is_sp500);
+CREATE INDEX IF NOT EXISTS idx_scan_results_scan ON scan_results(scan_id, scanned_at DESC);
+CREATE INDEX IF NOT EXISTS idx_scan_results_symbol ON scan_results(symbol, scanned_at DESC);
+CREATE INDEX IF NOT EXISTS idx_scan_results_score ON scan_results(scan_id, score DESC);
+CREATE INDEX IF NOT EXISTS idx_scan_results_expires ON scan_results(expires_at);
+CREATE INDEX IF NOT EXISTS idx_scan_executions_scan ON scan_executions(scan_id, executed_at DESC);
