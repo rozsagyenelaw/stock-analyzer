@@ -53,11 +53,10 @@ export function initializeScans(): void {
     {
       scan_name: 'Oversold Quality Stocks',
       scan_type: 'VALUE_MOMENTUM',
-      description: 'Quality stocks that are temporarily oversold - RSI < 30, reasonable P/E, positive earnings',
+      description: 'Quality stocks that are temporarily oversold - RSI < 35, reasonable valuation',
       criteria: {
-        rsi: { max: 30 },
-        pe: { max: 25, min: 5 },
-        earnings: 'positive',
+        rsi: { max: 35 },
+        priceAction: 'oversold',
       },
       is_active: true,
     },
@@ -73,10 +72,9 @@ export function initializeScans(): void {
     {
       scan_name: 'Breakout Candidates',
       scan_type: 'BREAKOUT',
-      description: 'Price near 52-week high with high volume - potential breakouts',
+      description: 'Price near 52-week high with strong volume - potential breakouts',
       criteria: {
         priceAction: 'breakout',
-        volume: 'high',
       },
       is_active: true,
     },
@@ -341,7 +339,7 @@ function matchesCriteria(data: any, criteria: ScanCriteria): { matches: boolean;
   // Price action
   if (criteria.priceAction) {
     maxScore += 20;
-    if (criteria.priceAction === 'oversold' && data.rsi < 30) {
+    if (criteria.priceAction === 'oversold' && data.rsi < 35) {
       score += 20;
     } else if (criteria.priceAction === 'momentum' && data.rsi >= 50 && data.rsi <= 70) {
       score += 20;
@@ -352,7 +350,7 @@ function matchesCriteria(data: any, criteria: ScanCriteria): { matches: boolean;
 
   const normalizedScore = maxScore > 0 ? (score / maxScore) * 100 : 0;
   return {
-    matches: normalizedScore >= 60, // 60% threshold
+    matches: normalizedScore >= 50, // 50% threshold (lowered to find more opportunities)
     score: normalizedScore,
   };
 }
@@ -376,13 +374,21 @@ export async function runScan(scanId: string, useAI: boolean = false): Promise<S
 
   const results: ScanResult[] = [];
   let stocksScanned = 0;
+  let errorCount = 0;
 
-  console.log(`Running scan: ${scan.scan_name} on ${symbols.length} stocks...`);
+  console.log(`\n========================================`);
+  console.log(`Running scan: ${scan.scan_name}`);
+  console.log(`Scanning ${symbols.length} stocks`);
+  console.log(`Criteria:`, JSON.stringify(criteria, null, 2));
+  console.log(`========================================\n`);
 
   for (const symbol of symbols) {
     try {
       const data = await calculateIndicators(symbol);
-      if (!data) continue;
+      if (!data) {
+        console.log(`⚠ ${symbol}: No data returned`);
+        continue;
+      }
 
       stocksScanned++;
 
@@ -416,14 +422,25 @@ export async function runScan(scanId: string, useAI: boolean = false): Promise<S
         }
 
         results.push(result);
+        console.log(`✓ ${symbol}: Score ${score.toFixed(1)} - MATCH (Price: $${data.price?.toFixed(2)}, RSI: ${data.rsi?.toFixed(1)})`);
+      } else {
+        console.log(`  ${symbol}: Score ${score.toFixed(1)} (Price: $${data.price?.toFixed(2)}, RSI: ${data.rsi?.toFixed(1)})`);
       }
 
       // Rate limiting - small delay between requests
       await new Promise(resolve => setTimeout(resolve, 100));
-    } catch (error) {
-      console.error(`Error scanning ${symbol}:`, error);
+    } catch (error: any) {
+      errorCount++;
+      console.error(`✗ ${symbol}: ${error.message}`);
     }
   }
+
+  console.log(`\n========================================`);
+  console.log(`Scan Complete: ${scan.scan_name}`);
+  console.log(`Successfully scanned: ${stocksScanned}/${symbols.length}`);
+  console.log(`Errors: ${errorCount}`);
+  console.log(`Opportunities found: ${results.length}`);
+  console.log(`========================================\n`);
 
   // Sort by score and assign ranks
   results.sort((a, b) => b.score - a.score);
