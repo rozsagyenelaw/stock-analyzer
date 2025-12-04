@@ -18,6 +18,7 @@ import settingsRouter from './routes/settings';
 import screenerRouter from './routes/screener';
 import fundamentalsRouter from './routes/fundamentals';
 import optionsRouter from './routes/options';
+import aiRouter from './routes/ai';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -87,6 +88,7 @@ app.use('/api/settings', settingsRouter);
 app.use('/api/screener', screenerRouter);
 app.use('/api/fundamentals', fundamentalsRouter);
 app.use('/api/options', optionsRouter);
+app.use('/api/ai', aiRouter);
 
 // Error handling middleware
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {

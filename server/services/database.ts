@@ -100,6 +100,11 @@ export const alertQueries = {
     WHERE id = ?
   `),
 
+  updateAIReasoning: db.prepare(`
+    UPDATE alerts SET ai_reasoning = ?
+    WHERE id = ?
+  `),
+
   reset: db.prepare('UPDATE alerts SET triggered = 0, triggered_at = NULL WHERE id = ?'),
 
   delete: db.prepare('DELETE FROM alerts WHERE id = ?')

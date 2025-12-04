@@ -7,8 +7,9 @@ import { useState } from 'react';
 import EnhancedChart from '@/components/charts/EnhancedChart';
 import FundamentalsTab from '@/components/fundamentals/FundamentalsTab';
 import OptionsTab from '@/components/options/OptionsTab';
+import AIAnalysisTab from '@/components/ai/AIAnalysisTab';
 
-type TabType = 'technical' | 'fundamentals' | 'options';
+type TabType = 'technical' | 'fundamentals' | 'options' | 'ai';
 
 export default function StockDetail() {
   const { symbol } = useParams<{ symbol: string }>();
@@ -115,6 +116,16 @@ export default function StockDetail() {
               }`}
             >
               Options Analysis
+            </button>
+            <button
+              onClick={() => setActiveTab('ai')}
+              className={`flex-1 px-6 py-4 text-center font-semibold transition-colors whitespace-nowrap ${
+                activeTab === 'ai'
+                  ? 'text-primary-600 border-b-2 border-primary-600 bg-primary-50 dark:bg-primary-900/20'
+                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+              }`}
+            >
+              AI Analysis
             </button>
           </div>
         </div>
@@ -288,6 +299,9 @@ export default function StockDetail() {
 
       {/* Options Tab */}
       {symbol && activeTab === 'options' && <OptionsTab symbol={symbol} />}
+
+      {/* AI Analysis Tab */}
+      {symbol && activeTab === 'ai' && <AIAnalysisTab symbol={symbol} />}
     </div>
   );
 }

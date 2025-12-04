@@ -38,8 +38,13 @@ CREATE TABLE IF NOT EXISTS alerts (
   triggered_at TEXT,
   delivery_method TEXT NOT NULL CHECK(delivery_method IN ('PUSH', 'EMAIL', 'BOTH')),
   user_email TEXT,
+  ai_reasoning TEXT,
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
+
+-- Add ai_reasoning column to existing alerts table if not exists
+-- This will not error if column already exists
+ALTER TABLE alerts ADD COLUMN ai_reasoning TEXT;
 
 -- User settings
 CREATE TABLE IF NOT EXISTS settings (

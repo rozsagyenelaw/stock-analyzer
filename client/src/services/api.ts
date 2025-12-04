@@ -255,4 +255,120 @@ export const optionsApi = {
   },
 };
 
+// AI & ML API
+export const aiApi = {
+  getStatus: async () => {
+    const response = await api.get('/ai/status');
+    return response.data;
+  },
+
+  getPatterns: async (symbol: string, interval = '1day') => {
+    const response = await api.get(`/ai/${symbol}/patterns`, {
+      params: { interval },
+    });
+    return response.data;
+  },
+
+  getPredictions: async (symbol: string, model?: 'linear' | 'arima', interval = '1day') => {
+    const response = await api.get(`/ai/${symbol}/predictions`, {
+      params: { model, interval },
+    });
+    return response.data;
+  },
+
+  getSentiment: async (symbol: string, interval = '1day', optionsData?: any, patterns?: any[]) => {
+    const response = await api.post(`/ai/${symbol}/sentiment`, {
+      interval,
+      optionsData,
+      patterns,
+    });
+    return response.data;
+  },
+
+  getComprehensiveAnalysis: async (symbol: string, interval = '1day') => {
+    const response = await api.get(`/ai/${symbol}/comprehensive`, {
+      params: { interval },
+    });
+    return response.data;
+  },
+
+  analyzeNews: async (symbol: string, headlines: string[]) => {
+    const response = await api.post(`/ai/${symbol}/analyze-news`, {
+      headlines,
+    });
+    return response.data;
+  },
+
+  getRecommendation: async (
+    symbol: string,
+    data: {
+      price: number;
+      technicalAnalysis: any;
+      fundamentals?: any;
+      optionsFlow?: any;
+      patterns?: any[];
+    }
+  ) => {
+    const response = await api.post(`/ai/${symbol}/recommendation`, data);
+    return response.data;
+  },
+
+  askQuestion: async (question: string, symbol?: string, marketData?: any) => {
+    const response = await api.post('/ai/ask', {
+      question,
+      symbol,
+      marketData,
+    });
+    return response.data;
+  },
+
+  explainPattern: async (patternName: string, symbol: string, patternDetails?: any) => {
+    const response = await api.post('/ai/explain-pattern', {
+      patternName,
+      symbol,
+      patternDetails,
+    });
+    return response.data;
+  },
+
+  getMarketCommentary: async (data: {
+    topGainers: Array<{ symbol: string; change: number }>;
+    topLosers: Array<{ symbol: string; change: number }>;
+    sectorPerformance?: Record<string, number>;
+    marketSentiment: 'bullish' | 'bearish' | 'neutral';
+  }) => {
+    const response = await api.post('/ai/market-commentary', data);
+    return response.data;
+  },
+
+  getAlertReasoning: async (
+    symbol: string,
+    alertType: string,
+    triggerValue: number,
+    currentData?: any
+  ) => {
+    const response = await api.post('/ai/alert-reasoning', {
+      symbol,
+      alertType,
+      triggerValue,
+      currentData,
+    });
+    return response.data;
+  },
+
+  analyzeEarnings: async (symbol: string, transcript: string) => {
+    const response = await api.post(`/ai/${symbol}/earnings-analysis`, {
+      transcript,
+    });
+    return response.data;
+  },
+
+  backtestModel: async (symbol: string, model = 'linear_regression', period = 30, interval = '1day') => {
+    const response = await api.get(`/ai/${symbol}/backtest`, {
+      params: { model, period, interval },
+    });
+    return response.data;
+  },
+};
+
 export default api;
