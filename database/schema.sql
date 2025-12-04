@@ -231,3 +231,88 @@ CREATE INDEX IF NOT EXISTS idx_backtest_trades_symbol ON backtest_trades(symbol)
 CREATE INDEX IF NOT EXISTS idx_backtest_runs_strategy ON backtest_runs(strategy_id);
 CREATE INDEX IF NOT EXISTS idx_backtest_runs_status ON backtest_runs(status);
 CREATE INDEX IF NOT EXISTS idx_backtest_optimization_run ON backtest_optimization_results(backtest_run_id);
+
+-- News & Social Sentiment
+CREATE TABLE IF NOT EXISTS news_articles (
+  id TEXT PRIMARY KEY,
+  symbol TEXT,
+  title TEXT NOT NULL,
+  description TEXT,
+  content TEXT,
+  url TEXT NOT NULL UNIQUE,
+  source TEXT NOT NULL,
+  author TEXT,
+  image_url TEXT,
+  published_at TEXT NOT NULL,
+  sentiment_score REAL, -- -1 to 1 (negative to positive)
+  sentiment_label TEXT, -- BEARISH, NEUTRAL, BULLISH
+  sentiment_magnitude REAL, -- 0 to 1 (confidence)
+  category TEXT, -- EARNINGS, MERGER, REGULATION, etc.
+  keywords TEXT, -- JSON array
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE TABLE IF NOT EXISTS social_posts (
+  id TEXT PRIMARY KEY,
+  platform TEXT NOT NULL CHECK(platform IN ('REDDIT', 'TWITTER')),
+  symbol TEXT,
+  post_id TEXT NOT NULL, -- Reddit/Twitter post ID
+  author TEXT,
+  title TEXT,
+  content TEXT,
+  url TEXT NOT NULL,
+  score INTEGER DEFAULT 0, -- Reddit upvotes or Twitter likes
+  comments_count INTEGER DEFAULT 0,
+  shares_count INTEGER DEFAULT 0,
+  sentiment_score REAL,
+  sentiment_label TEXT,
+  sentiment_magnitude REAL,
+  posted_at TEXT NOT NULL,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  UNIQUE(platform, post_id)
+);
+
+CREATE TABLE IF NOT EXISTS sentiment_metrics (
+  id TEXT PRIMARY KEY,
+  symbol TEXT NOT NULL,
+  date TEXT NOT NULL,
+  timeframe TEXT NOT NULL DEFAULT 'daily', -- hourly, daily, weekly
+  source TEXT NOT NULL, -- NEWS, REDDIT, TWITTER, COMBINED
+  avg_sentiment REAL NOT NULL,
+  sentiment_label TEXT NOT NULL,
+  volume INTEGER NOT NULL DEFAULT 0, -- Number of articles/posts
+  bullish_count INTEGER DEFAULT 0,
+  neutral_count INTEGER DEFAULT 0,
+  bearish_count INTEGER DEFAULT 0,
+  trend TEXT, -- INCREASING, DECREASING, STABLE
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  UNIQUE(symbol, date, timeframe, source)
+);
+
+CREATE TABLE IF NOT EXISTS trending_symbols (
+  id TEXT PRIMARY KEY,
+  symbol TEXT NOT NULL,
+  rank INTEGER NOT NULL,
+  source TEXT NOT NULL, -- REDDIT, TWITTER, NEWS, COMBINED
+  mentions_count INTEGER NOT NULL DEFAULT 0,
+  sentiment_score REAL,
+  change_24h INTEGER DEFAULT 0, -- Change in mentions from 24h ago
+  timeframe TEXT NOT NULL DEFAULT 'daily',
+  date TEXT NOT NULL,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  UNIQUE(symbol, source, date, timeframe)
+);
+
+-- Indexes for performance
+CREATE INDEX IF NOT EXISTS idx_news_symbol ON news_articles(symbol);
+CREATE INDEX IF NOT EXISTS idx_news_published ON news_articles(published_at DESC);
+CREATE INDEX IF NOT EXISTS idx_news_source ON news_articles(source);
+CREATE INDEX IF NOT EXISTS idx_news_sentiment ON news_articles(sentiment_label);
+CREATE INDEX IF NOT EXISTS idx_social_symbol ON social_posts(symbol);
+CREATE INDEX IF NOT EXISTS idx_social_platform ON social_posts(platform);
+CREATE INDEX IF NOT EXISTS idx_social_posted ON social_posts(posted_at DESC);
+CREATE INDEX IF NOT EXISTS idx_social_score ON social_posts(score DESC);
+CREATE INDEX IF NOT EXISTS idx_sentiment_symbol_date ON sentiment_metrics(symbol, date DESC);
+CREATE INDEX IF NOT EXISTS idx_sentiment_source ON sentiment_metrics(source);
+CREATE INDEX IF NOT EXISTS idx_trending_date ON trending_symbols(date DESC, rank);
+CREATE INDEX IF NOT EXISTS idx_trending_source ON trending_symbols(source);

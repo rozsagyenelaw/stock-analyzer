@@ -804,3 +804,103 @@ export interface BacktestRequest {
   optimization_type?: OptimizationType;
   optimization_params?: WalkForwardOptimizationParams;
 }
+
+// ============================================================================
+// NEWS & SOCIAL SENTIMENT TYPES
+// ============================================================================
+
+export type SentimentLabel = 'BEARISH' | 'NEUTRAL' | 'BULLISH';
+export type SocialPlatform = 'REDDIT' | 'TWITTER';
+export type SentimentSource = 'NEWS' | 'REDDIT' | 'TWITTER' | 'COMBINED';
+
+export interface NewsArticle {
+  id: string;
+  symbol?: string;
+  title: string;
+  description?: string;
+  content?: string;
+  url: string;
+  source: string;
+  author?: string;
+  image_url?: string;
+  published_at: string;
+  sentiment_score?: number; // -1 to 1
+  sentiment_label?: SentimentLabel;
+  sentiment_magnitude?: number; // 0 to 1
+  category?: string;
+  keywords?: string[];
+  created_at: string;
+}
+
+export interface SocialPost {
+  id: string;
+  platform: SocialPlatform;
+  symbol?: string;
+  post_id: string;
+  author?: string;
+  title?: string;
+  content?: string;
+  url: string;
+  score: number;
+  comments_count: number;
+  shares_count: number;
+  sentiment_score?: number;
+  sentiment_label?: SentimentLabel;
+  sentiment_magnitude?: number;
+  posted_at: string;
+  created_at: string;
+}
+
+export interface SentimentMetrics {
+  id: string;
+  symbol: string;
+  date: string;
+  timeframe: 'hourly' | 'daily' | 'weekly';
+  source: SentimentSource;
+  avg_sentiment: number;
+  sentiment_label: SentimentLabel;
+  volume: number;
+  bullish_count: number;
+  neutral_count: number;
+  bearish_count: number;
+  trend?: 'INCREASING' | 'DECREASING' | 'STABLE';
+  created_at: string;
+}
+
+export interface TrendingSymbol {
+  id: string;
+  symbol: string;
+  rank: number;
+  source: SentimentSource;
+  mentions_count: number;
+  sentiment_score?: number;
+  change_24h: number;
+  timeframe: string;
+  date: string;
+  created_at: string;
+}
+
+export interface SentimentSummary {
+  symbol: string;
+  overall_sentiment: SentimentLabel;
+  sentiment_score: number;
+  news: {
+    sentiment: SentimentLabel;
+    score: number;
+    volume: number;
+    recent_articles: NewsArticle[];
+  };
+  reddit: {
+    sentiment: SentimentLabel;
+    score: number;
+    volume: number;
+    trending_posts: SocialPost[];
+  };
+  twitter: {
+    sentiment: SentimentLabel;
+    score: number;
+    volume: number;
+    trending_posts: SocialPost[];
+  };
+  history: SentimentMetrics[];
+}
