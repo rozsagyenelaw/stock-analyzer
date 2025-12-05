@@ -3,7 +3,7 @@
  * Recommends optimal options strategies based on market outlook and stock analysis
  */
 
-import { generateOptionsChain, analyzeStrategy, OptionsStrategy } from './options';
+import { generateOptionsChain, OptionsStrategy } from './options';
 
 export type MarketOutlook = 'bullish' | 'bearish' | 'neutral' | 'volatile';
 
@@ -182,10 +182,8 @@ function createLongCallRecommendation(
     ],
   };
 
-  const analysis = analyzeStrategy(strategy, currentPrice);
-
   return {
-    strategy: analysis,
+    strategy,
     suitability: 85,
     marketOutlook: 'bullish',
     reasoning: [
@@ -238,12 +236,11 @@ function createBullCallSpreadRecommendation(
     ],
   };
 
-  const analysis = analyzeStrategy(strategy, currentPrice);
   const netDebit = buyCall.ask - sellCall.bid;
   const maxProfit = (sellStrike - buyStrike - netDebit) * 100;
 
   return {
-    strategy: analysis,
+    strategy,
     suitability: 90,
     marketOutlook: 'bullish',
     reasoning: [
@@ -292,10 +289,8 @@ function createCoveredCallRecommendation(
     ],
   };
 
-  const analysis = analyzeStrategy(strategy, currentPrice);
-
   return {
-    strategy: analysis,
+    strategy,
     suitability: 80,
     marketOutlook: 'neutral',
     reasoning: [
@@ -344,10 +339,8 @@ function createLongPutRecommendation(
     ],
   };
 
-  const analysis = analyzeStrategy(strategy, currentPrice);
-
   return {
-    strategy: analysis,
+    strategy,
     suitability: 85,
     marketOutlook: 'bearish',
     reasoning: [
@@ -400,12 +393,11 @@ function createBearPutSpreadRecommendation(
     ],
   };
 
-  const analysis = analyzeStrategy(strategy, currentPrice);
   const netDebit = buyPut.ask - sellPut.bid;
   const maxProfit = (buyStrike - sellStrike - netDebit) * 100;
 
   return {
-    strategy: analysis,
+    strategy,
     suitability: 88,
     marketOutlook: 'bearish',
     reasoning: [
@@ -454,10 +446,8 @@ function createCashSecuredPutRecommendation(
     ],
   };
 
-  const analysis = analyzeStrategy(strategy, currentPrice);
-
   return {
-    strategy: analysis,
+    strategy,
     suitability: 75,
     marketOutlook: 'neutral',
     reasoning: [
@@ -516,11 +506,10 @@ function createIronCondorRecommendation(
     ],
   };
 
-  const analysis = analyzeStrategy(strategy, currentPrice);
   const netCredit = (sellPut.bid + sellCall.bid - buyPut.ask - buyCall.ask);
 
   return {
-    strategy: analysis,
+    strategy,
     suitability: 90,
     marketOutlook: 'neutral',
     reasoning: [
@@ -577,11 +566,10 @@ function createButterflyRecommendation(
     ],
   };
 
-  const analysis = analyzeStrategy(strategy, currentPrice);
   const netDebit = lowerCall.ask + upperCall.ask - (2 * middleCall.bid);
 
   return {
-    strategy: analysis,
+    strategy,
     suitability: 85,
     marketOutlook: 'neutral',
     reasoning: [
@@ -633,11 +621,10 @@ function createLongStraddleRecommendation(
     ],
   };
 
-  const analysis = analyzeStrategy(strategy, currentPrice);
   const totalCost = call.ask + put.ask;
 
   return {
-    strategy: analysis,
+    strategy,
     suitability: 88,
     marketOutlook: 'volatile',
     reasoning: [
@@ -690,11 +677,10 @@ function createLongStrangleRecommendation(
     ],
   };
 
-  const analysis = analyzeStrategy(strategy, currentPrice);
   const totalCost = call.ask + put.ask;
 
   return {
-    strategy: analysis,
+    strategy,
     suitability: 85,
     marketOutlook: 'volatile',
     reasoning: [
@@ -754,11 +740,10 @@ function createIronButterflyRecommendation(
     ],
   };
 
-  const analysis = analyzeStrategy(strategy, currentPrice);
   const netCredit = middlePut.bid + middleCall.bid - lowerPut.ask - upperCall.ask;
 
   return {
-    strategy: analysis,
+    strategy,
     suitability: 82,
     marketOutlook: 'neutral',
     reasoning: [
