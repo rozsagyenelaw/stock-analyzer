@@ -30,6 +30,7 @@ import newsRouter from './routes/news';
 import economyRouter from './routes/economy';
 import discoveryRouter from './routes/discovery';
 import optionsIdeasRouter from './routes/optionsIdeas';
+import optionsFlowRouter from './routes/optionsFlow';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -132,6 +133,7 @@ app.use('/api/news', newsRouter);
 app.use('/api/economy', economyRouter);
 app.use('/api/discovery', discoveryRouter);
 app.use('/api/options-ideas', optionsIdeasRouter);
+app.use('/api/options-flow', optionsFlowRouter);
 
 // Error logging middleware
 app.use(errorLogger);
