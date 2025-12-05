@@ -37,6 +37,9 @@ import tradingRouter from './routes/trading';
 const app = express();
 const PORT = process.env.PORT || 3001;
 
+// Trust proxy - required for Render and other reverse proxies
+app.set('trust proxy', 1);
+
 // Security middleware
 app.use(helmet());
 
