@@ -20,6 +20,7 @@ import AITradeJournal from './pages/AITradeJournal';
 import EarningsAnalyzer from './pages/EarningsAnalyzer';
 import GreeksMonitor from './pages/GreeksMonitor';
 import OptionsIdeas from './pages/OptionsIdeas';
+import OptionsFlow from './pages/OptionsFlow';
 import Layout from './components/common/Layout';
 
 function App() {
@@ -46,6 +47,7 @@ function App() {
                     <Route path="/news" element={<News />} />
                     <Route path="/economy" element={<Economy />} />
                     <Route path="/options-ideas" element={<OptionsIdeas />} />
+                    <Route path="/options-flow" element={<OptionsFlow />} />
 
                     {/* Auth-required routes */}
                     <Route

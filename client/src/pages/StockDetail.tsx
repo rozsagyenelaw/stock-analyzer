@@ -12,6 +12,8 @@ import AIRecommendationCard from '@/components/ai/AIRecommendationCard';
 import OptionsStrategyCard from '@/components/ai/OptionsStrategyCard';
 import EntryExitTimingCard from '@/components/ai/EntryExitTimingCard';
 import RiskAssessmentCard from '@/components/ai/RiskAssessmentCard';
+import TradeSignalsCard from '@/components/ai/TradeSignalsCard';
+import StrategyRecommenderCard from '@/components/ai/StrategyRecommenderCard';
 
 type TabType = 'technical' | 'fundamentals' | 'options' | 'ai' | 'trading-assistant';
 
@@ -323,7 +325,8 @@ export default function StockDetail() {
       {/* Trading Assistant Tab */}
       {symbol && activeTab === 'trading-assistant' && (
         <div className="space-y-6">
-          <OptionsStrategyCard symbol={symbol} />
+          <TradeSignalsCard symbol={symbol} accountSize={10000} riskPercentage={1} />
+          <StrategyRecommenderCard symbol={symbol} />
           <EntryExitTimingCard symbol={symbol} />
           <RiskAssessmentCard symbol={symbol} />
         </div>

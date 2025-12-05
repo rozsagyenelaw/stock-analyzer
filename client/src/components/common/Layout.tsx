@@ -47,6 +47,7 @@ export default function Layout({ children }: LayoutProps) {
     { name: 'Search', href: '/search', icon: Search },
     { name: 'Screener', href: '/screener', icon: Filter },
     { name: 'Options Ideas', href: '/options-ideas', icon: Target },
+    { name: 'Options Flow', href: '/options-flow', icon: Activity },
     { name: 'Portfolio', href: '/portfolio', icon: PieChart },
     { name: 'Backtest', href: '/backtest', icon: BarChart3 },
     { name: 'News', href: '/news', icon: TrendingUp },
