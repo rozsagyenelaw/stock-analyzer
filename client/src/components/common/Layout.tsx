@@ -6,7 +6,6 @@ import {
   BookOpen,
   Bell,
   Settings as SettingsIcon,
-  Search,
   Filter,
   Menu,
   X,
