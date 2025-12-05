@@ -20,6 +20,7 @@ import {
   User,
   LogOut,
   ChevronDown,
+  Star,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import toast from 'react-hot-toast';
@@ -44,7 +45,7 @@ export default function Layout({ children }: LayoutProps) {
   const navigation = [
     { name: 'Dashboard', href: '/', icon: LayoutDashboard },
     { name: 'Discover', href: '/discover', icon: Sparkles },
-    { name: 'Search', href: '/search', icon: Search },
+    { name: 'Watchlist', href: '/watchlist', icon: Star },
     { name: 'Screener', href: '/screener', icon: Filter },
     { name: 'Options Ideas', href: '/options-ideas', icon: Target },
     { name: 'Options Flow', href: '/options-flow', icon: Activity },
