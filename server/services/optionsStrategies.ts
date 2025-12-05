@@ -92,27 +92,68 @@ export async function scanCoveredCalls(
   for (const symbol of symbols) {
     try {
       const quote = await getQuote(symbol);
-      const stockPrice = quote.close;
+      const stockPrice = parseFloat(quote.close);
+      console.log(`\n=== ${symbol} === Price: $${stockPrice.toFixed(2)}`);
 
       // Get options chain
       const expirations = await getOptionsExpirations(symbol);
-      const targetExpiration = findExpirationInRange(expirations, preferredDTE.min, preferredDTE.max);
+      console.log(`${symbol}: Found ${expirations.length} expirations:`, expirations.slice(0, 5));
 
-      if (!targetExpiration) continue;
+      if (!expirations || expirations.length === 0) {
+        console.log(`${symbol}: No expirations available`);
+        continue;
+      }
+
+      // Try to find expiration in preferred range, otherwise use nearest available
+      let targetExpiration = findExpirationInRange(expirations, preferredDTE.min, preferredDTE.max);
+
+      // If no expiration in preferred range, use the nearest one (but not too far/close)
+      if (!targetExpiration) {
+        // Use any expiration between 7-90 days (relaxed range)
+        targetExpiration = findExpirationInRange(expirations, 7, 90);
+        if (!targetExpiration && expirations.length > 0) {
+          targetExpiration = expirations[0]; // Use first available as last resort
+          console.log(`${symbol}: Using first available expiration ${targetExpiration}`);
+        }
+      }
+
+      if (!targetExpiration) {
+        console.log(`${symbol}: No usable expirations found`);
+        continue;
+      }
+
+      const dte = calculateDTE(targetExpiration);
+      console.log(`${symbol}: Selected expiration ${targetExpiration} (${dte} DTE)`);
 
       const chain = await getOptionsChain(symbol, targetExpiration);
-      const dte = calculateDTE(targetExpiration);
+      console.log(`${symbol}: Chain has ${chain.calls.length} calls, ${chain.puts.length} puts`);
 
       // Find calls 1-2 strikes OTM
       const otmCalls = chain.calls.filter(
         call => call.strike > stockPrice && call.strike <= stockPrice * 1.05
       );
 
+      console.log(`${symbol}: ${otmCalls.length} OTM calls (1-5% above $${stockPrice.toFixed(2)})`);
+      if (otmCalls.length === 0) {
+        console.log(`${symbol}: No OTM calls found (price: $${stockPrice})`);
+        // Log first few strikes to see why they don't match
+        if (chain.calls.length > 0) {
+          console.log(`${symbol}: Sample strikes:`, chain.calls.slice(0, 5).map(c => `$${c.strike.toFixed(2)}`));
+        }
+      }
+
+      let premiumsFiltered = 0;
       for (const call of otmCalls) {
         const premium = (call.bid + call.ask) / 2;
+        const minPremium = stockPrice * 0.003;
 
-        // Premium must be > 1% of stock price
-        if (premium < stockPrice * 0.01) continue;
+        console.log(`${symbol}: Strike $${call.strike.toFixed(2)} - Bid: $${call.bid.toFixed(2)}, Ask: $${call.ask.toFixed(2)}, Premium: $${premium.toFixed(2)}, Min: $${minPremium.toFixed(2)}`);
+
+        // Premium must be > 0.3% of stock price (relaxed from 1%)
+        if (premium < minPremium) {
+          premiumsFiltered++;
+          continue;
+        }
 
         const buyingPower = stockPrice * 100; // Own 100 shares
         const annualizedReturn = calculateAnnualizedReturn(premium * 100, buyingPower, dte);
@@ -178,14 +219,15 @@ export async function scanCashSecuredPuts(
   for (const symbol of symbols) {
     try {
       const quote = await getQuote(symbol);
-      const stockPrice = quote.close;
+      const stockPrice = parseFloat(quote.close);
 
-      // Check if slightly oversold (RSI < 40)
-      const timeSeries = await getTimeSeries(symbol, '1day', 20);
+      // Check if slightly oversold (RSI < 55) - relaxed filter
+      const timeSeriesData = await getTimeSeries(symbol, '1day', 20);
+      const timeSeries = timeSeriesData.values || [];
       const closes = timeSeries.map((d: any) => parseFloat(d.close));
       const rsi = calculateRSI(closes, 14);
 
-      if (rsi > 40) continue; // Skip if not oversold
+      if (rsi > 55) continue; // Skip if not oversold (relaxed from 40)
 
       const expirations = await getOptionsExpirations(symbol);
       const targetExpiration = findExpirationInRange(expirations, preferredDTE.min, preferredDTE.max);
@@ -203,8 +245,8 @@ export async function scanCashSecuredPuts(
       for (const put of targetPuts) {
         const premium = (put.bid + put.ask) / 2;
 
-        // Premium must be > 1.5% of strike
-        if (premium < put.strike * 0.015) continue;
+        // Premium must be > 0.5% of strike (relaxed from 1.5%)
+        if (premium < put.strike * 0.005) continue;
 
         const buyingPower = put.strike * 100; // Cash to secure the put
         const annualizedReturn = calculateAnnualizedReturn(premium * 100, buyingPower, dte);
@@ -271,10 +313,11 @@ export async function scanCheapCallsOnBreakouts(
   for (const symbol of symbols) {
     try {
       const quote = await getQuote(symbol);
-      const stockPrice = quote.close;
+      const stockPrice = parseFloat(quote.close);
 
       // Check for breakout (price > 20-day SMA and volume spike)
-      const timeSeries = await getTimeSeries(symbol, '1day', 50);
+      const timeSeriesData = await getTimeSeries(symbol, '1day', 50);
+      const timeSeries = timeSeriesData.values || [];
       const closes = timeSeries.map((d: any) => parseFloat(d.close));
       const sma20 = calculateSMA(closes, 20);
 
@@ -360,10 +403,11 @@ export async function scanLEAPOpportunities(
   for (const symbol of symbols) {
     try {
       const quote = await getQuote(symbol);
-      const stockPrice = quote.close;
+      const stockPrice = parseFloat(quote.close);
 
       // Check if stock is down > 20% from highs
-      const timeSeries = await getTimeSeries(symbol, '1day', 250);
+      const timeSeriesData = await getTimeSeries(symbol, '1day', 250);
+      const timeSeries = timeSeriesData.values || [];
       const closes = timeSeries.map((d: any) => parseFloat(d.close));
       const high52w = Math.max(...closes);
       const percentFromHigh = ((stockPrice - high52w) / high52w) * 100;

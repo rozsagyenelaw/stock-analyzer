@@ -1,5 +1,6 @@
 import axios from 'axios';
 import NodeCache from 'node-cache';
+import * as polygonOptions from './polygonOptions';
 
 const TWELVE_DATA_API_KEY = process.env.TWELVE_DATA_API_KEY;
 const TWELVE_DATA_URL = 'https://api.twelvedata.com';
@@ -45,8 +46,16 @@ interface GreeksCalculation {
 
 /**
  * Fetch options expiration dates for a symbol
+ * Uses Polygon.io if configured, otherwise falls back to Twelve Data
  */
 export async function getOptionsExpirations(symbol: string): Promise<string[]> {
+  // Use Polygon.io if available
+  if (polygonOptions.isPolygonConfigured()) {
+    console.log(`Using Polygon.io for ${symbol} options expirations`);
+    return polygonOptions.getOptionsExpirations(symbol);
+  }
+
+  // Fallback to Twelve Data (legacy)
   const cacheKey = `expirations_${symbol}`;
   const cached = optionsCache.get<string[]>(cacheKey);
   if (cached) return cached;
@@ -64,6 +73,12 @@ export async function getOptionsExpirations(symbol: string): Promise<string[]> {
       timeout: 10000,
     });
 
+    // Check if API returned an error (e.g., options unavailable on free tier)
+    if (response.data.status === 'error' || response.data.code === 404) {
+      console.log(`Options data unavailable for ${symbol}: ${response.data.message || 'Not supported on current API plan'}`);
+      return [];
+    }
+
     const expirations = response.data.expirations || [];
     optionsCache.set(cacheKey, expirations);
     return expirations;
@@ -77,11 +92,31 @@ export async function getOptionsExpirations(symbol: string): Promise<string[]> {
 
 /**
  * Fetch full options chain for a symbol and expiration
+ * Uses Polygon.io if configured, otherwise falls back to Twelve Data
  */
 export async function getOptionsChain(
   symbol: string,
   expiration?: string
 ): Promise<OptionsChain> {
+  // Use Polygon.io if available
+  if (polygonOptions.isPolygonConfigured()) {
+    console.log(`Using Polygon.io for ${symbol} options chain`);
+    const polygonChain = await polygonOptions.getOptionsChain(symbol, expiration);
+
+    // Convert Polygon format to our OptionsChain format
+    const chain: OptionsChain = {
+      symbol,
+      stockPrice: 0, // Will be fetched separately via Twelve Data stock API
+      timestamp: new Date().toISOString(),
+      expirations: await polygonOptions.getOptionsExpirations(symbol),
+      calls: polygonChain.calls.map(c => formatPolygonContract(c)),
+      puts: polygonChain.puts.map(p => formatPolygonContract(p)),
+    };
+
+    return chain;
+  }
+
+  // Fallback to Twelve Data (legacy)
   const cacheKey = `chain_${symbol}_${expiration || 'nearest'}`;
   const cached = optionsCache.get<OptionsChain>(cacheKey);
   if (cached) return cached;
@@ -283,6 +318,30 @@ function formatOptionContract(contract: any): OptionContract {
     vega: parseFloat(contract.vega) || 0,
     rho: parseFloat(contract.rho) || 0,
     inTheMoney: contract.in_the_money === true,
+  };
+}
+
+/**
+ * Format Polygon.io option contract to our standard format
+ */
+function formatPolygonContract(contract: polygonOptions.PolygonOptionContract): OptionContract {
+  return {
+    symbol: contract.ticker,
+    strike: contract.strike,
+    expiration: contract.expiration,
+    type: contract.type,
+    bid: contract.bid,
+    ask: contract.ask,
+    last: contract.last,
+    volume: contract.volume,
+    openInterest: contract.openInterest,
+    impliedVolatility: contract.impliedVolatility,
+    delta: contract.delta,
+    gamma: contract.gamma,
+    theta: contract.theta,
+    vega: contract.vega,
+    rho: contract.rho,
+    inTheMoney: false, // Will be calculated based on stock price
   };
 }
 
