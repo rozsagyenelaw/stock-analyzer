@@ -6,6 +6,7 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
+import path from 'path';
 import './services/database'; // Database auto-initializes on import
 import { initializeEmailService } from './services/email';
 import logger from './services/logger';
@@ -136,6 +137,20 @@ app.use('/api/discovery', discoveryRouter);
 app.use('/api/options-ideas', optionsIdeasRouter);
 app.use('/api/options-flow', optionsFlowRouter);
 app.use('/api/trading', tradingRouter);
+
+// Serve static files from client build in production
+if (process.env.NODE_ENV === 'production') {
+  const clientBuildPath = path.join(__dirname, '../client/dist');
+  app.use(express.static(clientBuildPath));
+
+  // Handle client-side routing - send all non-API requests to index.html
+  app.get('*', (req, res, next) => {
+    if (req.path.startsWith('/api/')) {
+      return next();
+    }
+    res.sendFile(path.join(clientBuildPath, 'index.html'));
+  });
+}
 
 // Error logging middleware
 app.use(errorLogger);
