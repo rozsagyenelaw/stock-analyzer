@@ -110,11 +110,11 @@ Provide a comprehensive analysis in JSON format:
 }`;
 
   const completion = await openai.chat.completions.create({
-    model: 'gpt-4',
+    model: 'gpt-4o-mini', // Using gpt-4o-mini which supports JSON mode and is more widely available
     messages: [
       {
         role: 'system',
-        content: 'You are a veteran Wall Street trader with 20 years of experience in technical and fundamental analysis. Provide actionable, risk-aware trading advice.',
+        content: 'You are a veteran Wall Street trader with 20 years of experience in technical and fundamental analysis. Provide actionable, risk-aware trading advice. Always respond with valid JSON.',
       },
       { role: 'user', content: prompt },
     ],

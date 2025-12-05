@@ -46,9 +46,12 @@ export default function Watchlist() {
 
     setIsSearching(true);
     try {
-      const results = await stocksApi.search(searchQuery);
-      setSearchResults(results);
+      const response = await stocksApi.search(searchQuery);
+      // API returns {data: [...], status: "ok"}
+      const results = response.data || response;
+      setSearchResults(Array.isArray(results) ? results : []);
     } catch (error) {
+      console.error('Search error:', error);
       toast.error('Search failed');
     } finally {
       setIsSearching(false);
