@@ -161,8 +161,8 @@ function WatchlistCard({ item, onRemove }: { item: any; onRemove: () => void }) 
     refetchInterval: 60000, // Refresh every minute
   });
 
-  const change = quote?.change || 0;
-  const changePercent = quote?.percent_change || 0;
+  const change = parseFloat(quote?.change) || 0;
+  const changePercent = parseFloat(quote?.percent_change) || 0;
   const isPositive = change >= 0;
 
   return (
@@ -185,7 +185,9 @@ function WatchlistCard({ item, onRemove }: { item: any; onRemove: () => void }) 
 
       {quote ? (
         <>
-          <div className="text-3xl font-bold mb-2">${quote.close?.toFixed(2) || 'N/A'}</div>
+          <div className="text-3xl font-bold mb-2">
+            ${parseFloat(quote.close)?.toFixed(2) || 'N/A'}
+          </div>
           <div className={`flex items-center gap-2 ${isPositive ? 'text-green-600' : 'text-red-600'}`}>
             {isPositive ? <TrendingUp className="w-5 h-5" /> : <TrendingDown className="w-5 h-5" />}
             <span className="font-semibold">
