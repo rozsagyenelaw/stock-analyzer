@@ -1,13 +1,11 @@
 import { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
 import {
   DollarSign,
   TrendingUp,
-  TrendingDown,
   Sparkles,
   RefreshCw,
-  Filter,
   ChevronDown,
   ChevronUp,
   AlertCircle,
@@ -15,7 +13,6 @@ import {
   Calendar,
   Zap,
 } from 'lucide-react';
-import toast from 'react-hot-toast';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
@@ -66,8 +63,6 @@ export default function OptionsIdeas() {
   const [riskLevel, setRiskLevel] = useState<'conservative' | 'moderate' | 'aggressive'>('moderate');
   const [expandedCard, setExpandedCard] = useState<string | null>(null);
   const [useAI, setUseAI] = useState(false);
-
-  const queryClient = useQueryClient();
 
   // Fetch available strategies
   const { data: strategies = [] } = useQuery({
