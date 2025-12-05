@@ -138,22 +138,19 @@ app.use('/api/options-ideas', optionsIdeasRouter);
 app.use('/api/options-flow', optionsFlowRouter);
 app.use('/api/trading', tradingRouter);
 
+// Error logging middleware
+app.use(errorLogger);
+
 // Serve static files from client build in production
 if (process.env.NODE_ENV === 'production') {
   const clientBuildPath = path.join(__dirname, '../client/dist');
   app.use(express.static(clientBuildPath));
 
   // Handle client-side routing - send all non-API requests to index.html
-  app.get('*', (req, res, next) => {
-    if (req.path.startsWith('/api/')) {
-      return next();
-    }
+  app.get('*', (req, res) => {
     res.sendFile(path.join(clientBuildPath, 'index.html'));
   });
 }
-
-// Error logging middleware
-app.use(errorLogger);
 
 // Error handling middleware
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
@@ -168,10 +165,12 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
   });
 });
 
-// 404 handler
-app.use((req, res) => {
-  res.status(404).json({ error: 'Not found' });
-});
+// 404 handler for development
+if (process.env.NODE_ENV !== 'production') {
+  app.use((req, res) => {
+    res.status(404).json({ error: 'Not found' });
+  });
+}
 
 // Start server
 app.listen(PORT, () => {
