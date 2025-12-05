@@ -24,6 +24,7 @@ import backtestRouter from './routes/backtest';
 import newsRouter from './routes/news';
 import economyRouter from './routes/economy';
 import discoveryRouter from './routes/discovery';
+import optionsIdeasRouter from './routes/optionsIdeas';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -99,6 +100,7 @@ app.use('/api/backtest', backtestRouter);
 app.use('/api/news', newsRouter);
 app.use('/api/economy', economyRouter);
 app.use('/api/discovery', discoveryRouter);
+app.use('/api/options-ideas', optionsIdeasRouter);
 
 // Error handling middleware
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
