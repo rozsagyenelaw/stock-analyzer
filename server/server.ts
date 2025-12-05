@@ -8,8 +8,13 @@ import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import './services/database'; // Database auto-initializes on import
 import { initializeEmailService } from './services/email';
+import logger from './services/logger';
+import redisService from './services/redis';
+import { initializeUsersTable } from './services/auth';
+import { httpLogger, requestTracker, errorLogger } from './middleware/logging';
 
 // Import routes
+import authRouter from './routes/auth';
 import stocksRouter from './routes/stocks';
 import watchlistRouter from './routes/watchlist';
 import journalRouter from './routes/journal';
@@ -65,19 +70,44 @@ const limiter = rateLimit({
 
 app.use('/api', limiter);
 
+// Logging middleware
+app.use(httpLogger); // HTTP request logging
+app.use(requestTracker); // Performance tracking
+
 // Body parsing middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Initialize services
+logger.info('Starting Stock Analyzer API Server...');
+
 // Database initializes automatically on import
-console.log('✓ Database initialized');
+logger.info('✓ Database initialized');
+
+// Initialize users table for authentication
+try {
+  initializeUsersTable();
+  logger.info('✓ Users table initialized');
+} catch (error: any) {
+  logger.error('Failed to initialize users table:', error);
+}
+
+// Initialize Redis cache
+redisService
+  .connect()
+  .then(() => {
+    logger.info('✓ Redis cache connected');
+  })
+  .catch((error) => {
+    logger.warn('Redis connection failed, running without cache');
+  });
 
 // Initialize email service
 try {
   initializeEmailService();
-  console.log('✓ Email service initialized');
+  logger.info('✓ Email service initialized');
 } catch (error) {
-  console.warn('Email service initialization failed:', error);
+  logger.warn('Email service initialization failed:', error);
 }
 
 // Health check endpoint
@@ -86,6 +116,7 @@ app.get('/health', (req, res) => {
 });
 
 // API routes
+app.use('/api/auth', authRouter); // Authentication routes (no auth required)
 app.use('/api/stocks', stocksRouter);
 app.use('/api/watchlist', watchlistRouter);
 app.use('/api/journal', journalRouter);
@@ -102,9 +133,16 @@ app.use('/api/economy', economyRouter);
 app.use('/api/discovery', discoveryRouter);
 app.use('/api/options-ideas', optionsIdeasRouter);
 
+// Error logging middleware
+app.use(errorLogger);
+
 // Error handling middleware
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
-  console.error('Unhandled error:', err);
+  logger.error('Unhandled error', {
+    error: err.message,
+    stack: err.stack,
+    path: req.path,
+  });
   res.status(err.status || 500).json({
     error: 'Internal server error',
     message: process.env.NODE_ENV === 'development' ? err.message : undefined,
@@ -118,7 +156,7 @@ app.use((req, res) => {
 
 // Start server
 app.listen(PORT, () => {
-  console.log(`
+  logger.info(`
 ╔════════════════════════════════════════╗
 ║   Stock Analyzer API Server           ║
 ║   Running on http://localhost:${PORT}   ║
@@ -130,11 +168,24 @@ app.listen(PORT, () => {
 if (process.env.NODE_ENV !== 'test') {
   import('./services/alertProcessor')
     .then(() => {
-      console.log('✓ Alert processor started');
+      logger.info('✓ Alert processor started');
     })
     .catch((error) => {
-      console.error('Failed to start alert processor:', error);
+      logger.error('Failed to start alert processor:', error);
     });
 }
+
+// Graceful shutdown
+process.on('SIGTERM', async () => {
+  logger.info('SIGTERM signal received: closing server');
+  await redisService.disconnect();
+  process.exit(0);
+});
+
+process.on('SIGINT', async () => {
+  logger.info('SIGINT signal received: closing server');
+  await redisService.disconnect();
+  process.exit(0);
+});
 
 export default app;

@@ -52,6 +52,49 @@ export function initializeDatabase(): void {
     // Ignore if table doesn't exist yet or column already exists
     console.log('Skipping ai_reasoning column migration');
   }
+
+  // Create performance indexes
+  createIndexes();
+}
+
+// Create indexes for better query performance
+function createIndexes(): void {
+  const indexes = [
+    // Watchlist indexes
+    'CREATE INDEX IF NOT EXISTS idx_watchlist_symbol ON watchlist(symbol)',
+    'CREATE INDEX IF NOT EXISTS idx_watchlist_sort_order ON watchlist(sort_order)',
+
+    // Trade journal indexes
+    'CREATE INDEX IF NOT EXISTS idx_trades_symbol ON trades(symbol)',
+    'CREATE INDEX IF NOT EXISTS idx_trades_status ON trades(status)',
+    'CREATE INDEX IF NOT EXISTS idx_trades_entry_date ON trades(entry_date)',
+    'CREATE INDEX IF NOT EXISTS idx_trades_exit_date ON trades(exit_date)',
+
+    // Alert indexes
+    'CREATE INDEX IF NOT EXISTS idx_alerts_symbol ON alerts(symbol)',
+    'CREATE INDEX IF NOT EXISTS idx_alerts_enabled ON alerts(enabled)',
+    'CREATE INDEX IF NOT EXISTS idx_alerts_triggered ON alerts(triggered)',
+    'CREATE INDEX IF NOT EXISTS idx_alerts_created_at ON alerts(created_at)',
+
+    // User indexes (if users table exists)
+    'CREATE INDEX IF NOT EXISTS idx_users_email ON users(email)',
+    'CREATE INDEX IF NOT EXISTS idx_users_username ON users(username)',
+    'CREATE INDEX IF NOT EXISTS idx_users_is_active ON users(is_active)',
+
+    // Compound indexes for common queries
+    'CREATE INDEX IF NOT EXISTS idx_trades_symbol_status ON trades(symbol, status)',
+    'CREATE INDEX IF NOT EXISTS idx_alerts_enabled_triggered ON alerts(enabled, triggered)',
+  ];
+
+  indexes.forEach((indexSql) => {
+    try {
+      db.exec(indexSql);
+    } catch (error) {
+      // Silently ignore errors (e.g., if index already exists or table doesn't exist)
+    }
+  });
+
+  console.log('Database indexes created/verified');
 }
 
 // Initialize the database immediately
