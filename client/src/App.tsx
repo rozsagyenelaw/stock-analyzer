@@ -1,5 +1,9 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
+import { AuthProvider } from './contexts/AuthContext';
+import ProtectedRoute from './components/auth/ProtectedRoute';
+import Login from './pages/Login';
+import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import StockDetail from './pages/StockDetail';
 import Watchlist from './pages/Watchlist';
@@ -21,52 +25,132 @@ import Layout from './components/common/Layout';
 function App() {
   return (
     <Router>
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-        <Layout>
+      <AuthProvider>
+        <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
           <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/stock/:symbol" element={<StockDetail />} />
-            <Route path="/stocks/:symbol" element={<StockDetail />} />
-            <Route path="/watchlist" element={<Watchlist />} />
-            <Route path="/screener" element={<Screener />} />
-            <Route path="/discover" element={<Discover />} />
-            <Route path="/portfolio" element={<Portfolio />} />
-            <Route path="/backtest" element={<Backtest />} />
-            <Route path="/news" element={<News />} />
-            <Route path="/economy" element={<Economy />} />
-            <Route path="/journal" element={<Journal />} />
-            <Route path="/alerts" element={<Alerts />} />
-            <Route path="/settings" element={<Settings />} />
-            <Route path="/options-ideas" element={<OptionsIdeas />} />
-            <Route path="/ai/trade-journal" element={<AITradeJournal />} />
-            <Route path="/ai/earnings" element={<EarningsAnalyzer />} />
-            <Route path="/ai/greeks" element={<GreeksMonitor />} />
-            <Route path="*" element={<Navigate to="/" replace />} />
+            {/* Public routes */}
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+
+            {/* Protected routes with Layout */}
+            <Route
+              path="/*"
+              element={
+                <Layout>
+                  <Routes>
+                    <Route path="/" element={<Dashboard />} />
+                    <Route path="/stock/:symbol" element={<StockDetail />} />
+                    <Route path="/stocks/:symbol" element={<StockDetail />} />
+                    <Route path="/screener" element={<Screener />} />
+                    <Route path="/discover" element={<Discover />} />
+                    <Route path="/news" element={<News />} />
+                    <Route path="/economy" element={<Economy />} />
+                    <Route path="/options-ideas" element={<OptionsIdeas />} />
+
+                    {/* Auth-required routes */}
+                    <Route
+                      path="/watchlist"
+                      element={
+                        <ProtectedRoute>
+                          <Watchlist />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/journal"
+                      element={
+                        <ProtectedRoute>
+                          <Journal />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/portfolio"
+                      element={
+                        <ProtectedRoute>
+                          <Portfolio />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/alerts"
+                      element={
+                        <ProtectedRoute>
+                          <Alerts />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/backtest"
+                      element={
+                        <ProtectedRoute>
+                          <Backtest />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/settings"
+                      element={
+                        <ProtectedRoute>
+                          <Settings />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/ai/trade-journal"
+                      element={
+                        <ProtectedRoute>
+                          <AITradeJournal />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/ai/earnings"
+                      element={
+                        <ProtectedRoute>
+                          <EarningsAnalyzer />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/ai/greeks"
+                      element={
+                        <ProtectedRoute>
+                          <GreeksMonitor />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route path="*" element={<Navigate to="/" replace />} />
+                  </Routes>
+                </Layout>
+              }
+            />
           </Routes>
-        </Layout>
-        <Toaster
-          position="top-right"
-          toastOptions={{
-            duration: 3000,
-            style: {
-              background: '#1f2937',
-              color: '#f9fafb',
-            },
-            success: {
-              iconTheme: {
-                primary: '#10b981',
-                secondary: '#f9fafb',
+
+          <Toaster
+            position="top-right"
+            toastOptions={{
+              duration: 3000,
+              style: {
+                background: '#1f2937',
+                color: '#f9fafb',
               },
-            },
-            error: {
-              iconTheme: {
-                primary: '#ef4444',
-                secondary: '#f9fafb',
+              success: {
+                iconTheme: {
+                  primary: '#10b981',
+                  secondary: '#f9fafb',
+                },
               },
-            },
-          }}
-        />
-      </div>
+              error: {
+                iconTheme: {
+                  primary: '#ef4444',
+                  secondary: '#f9fafb',
+                },
+              },
+            }}
+          />
+        </div>
+      </AuthProvider>
     </Router>
   );
 }
