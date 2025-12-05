@@ -6,13 +6,9 @@ import {
   TrendingUp,
   TrendingDown,
   RefreshCw,
-  ChevronDown,
-  ChevronUp,
   AlertTriangle,
   DollarSign,
   BarChart3,
-  Clock,
-  Target,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 

@@ -6,9 +6,7 @@ import {
   Target,
   AlertCircle,
   DollarSign,
-  Shield,
   BarChart3,
-  Calendar,
   Zap,
 } from 'lucide-react';
 

@@ -9,7 +9,6 @@ import FundamentalsTab from '@/components/fundamentals/FundamentalsTab';
 import OptionsTab from '@/components/options/OptionsTab';
 import AIAnalysisTab from '@/components/ai/AIAnalysisTab';
 import AIRecommendationCard from '@/components/ai/AIRecommendationCard';
-import OptionsStrategyCard from '@/components/ai/OptionsStrategyCard';
 import EntryExitTimingCard from '@/components/ai/EntryExitTimingCard';
 import RiskAssessmentCard from '@/components/ai/RiskAssessmentCard';
 import TradeSignalsCard from '@/components/ai/TradeSignalsCard';
