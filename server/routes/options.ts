@@ -6,7 +6,7 @@ import {
   analyzeStrategy,
   buildStrategyFromTemplate,
 } from '../services/options';
-import { cacheMiddleware, CacheTTL } from '../services/redis';
+import { simpleCacheMiddleware, CacheTTL } from '../services/redis';
 
 const router = express.Router();
 
@@ -35,7 +35,7 @@ router.get('/:symbol', async (req, res) => {
  * GET /api/options/:symbol/chain
  * Get options chain for a specific expiration (cached for 5 minutes)
  */
-router.get('/:symbol/chain', cacheMiddleware(CacheTTL.optionsChain), async (req, res) => {
+router.get('/:symbol/chain', simpleCacheMiddleware(CacheTTL.optionsChain), async (req, res) => {
   try {
     const { symbol } = req.params;
     const { expiration } = req.query;

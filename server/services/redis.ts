@@ -235,4 +235,38 @@ export function cacheMiddleware(
   };
 }
 
+// Simple cache middleware that uses URL as key
+export function simpleCacheMiddleware(ttl: number) {
+  return async (req: any, res: any, next: any) => {
+    // Skip cache in development if env var is set
+    if (process.env.DISABLE_CACHE === 'true') {
+      return next();
+    }
+
+    // Build cache key from URL path and query params
+    const key = `cache:${req.path}:${JSON.stringify(req.query)}`;
+    const cachedData = await redisService.get(key);
+
+    if (cachedData) {
+      logger.debug(`Cache HIT: ${key}`);
+      return res.json(cachedData);
+    }
+
+    logger.debug(`Cache MISS: ${key}`);
+
+    // Store original json function
+    const originalJson = res.json.bind(res);
+
+    // Override json function to cache response
+    res.json = (data: any) => {
+      redisService.set(key, data, ttl).catch((err) => {
+        logger.error('Failed to cache response', { key, error: err });
+      });
+      return originalJson(data);
+    };
+
+    next();
+  };
+}
+
 export default redisService;
