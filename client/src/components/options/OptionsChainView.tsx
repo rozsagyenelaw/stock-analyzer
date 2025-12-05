@@ -1,4 +1,7 @@
+import { useState } from 'react';
+import { Calculator } from 'lucide-react';
 import type { OptionsChain, OptionContract } from '@/types';
+import PositionSizingCalculator from './PositionSizingCalculator';
 
 interface OptionsChainViewProps {
   chain: OptionsChain;
@@ -7,12 +10,19 @@ interface OptionsChainViewProps {
 }
 
 export default function OptionsChainView({ chain, chains, onExpirationChange }: OptionsChainViewProps) {
+  const [selectedContract, setSelectedContract] = useState<OptionContract | null>(null);
+  const [showCalculator, setShowCalculator] = useState(false);
   // Find ATM strike
   const atmStrike = chain.calls.reduce((prev, curr) =>
     Math.abs(curr.strike - chain.underlyingPrice) < Math.abs(prev.strike - chain.underlyingPrice)
       ? curr
       : prev
   ).strike;
+
+  const handleCalculatePosition = (contract: OptionContract) => {
+    setSelectedContract(contract);
+    setShowCalculator(true);
+  };
 
   const renderContract = (contract: OptionContract, type: 'call' | 'put') => {
     const isATM = contract.strike === atmStrike;
@@ -21,7 +31,7 @@ export default function OptionsChainView({ chain, chains, onExpirationChange }: 
     return (
       <div
         key={contract.symbol}
-        className={`grid grid-cols-8 gap-2 p-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 rounded ${
+        className={`grid grid-cols-9 gap-2 p-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 rounded ${
           isATM ? 'bg-yellow-50 dark:bg-yellow-900/20 font-semibold' : ''
         } ${isITM ? 'bg-green-50/50 dark:bg-green-900/10' : ''}`}
       >
@@ -57,6 +67,17 @@ export default function OptionsChainView({ chain, chains, onExpirationChange }: 
         {/* Gamma */}
         <div className="text-right text-gray-600 dark:text-gray-400">
           {contract.greeks.gamma.toFixed(4)}
+        </div>
+
+        {/* Calculate Button */}
+        <div className="flex justify-center">
+          <button
+            onClick={() => handleCalculatePosition(contract)}
+            className="p-1 hover:bg-primary-100 dark:hover:bg-primary-900/20 rounded transition-colors"
+            title="Calculate Position Size"
+          >
+            <Calculator className="w-4 h-4 text-primary-600 dark:text-primary-400" />
+          </button>
         </div>
       </div>
     );
@@ -111,7 +132,7 @@ export default function OptionsChainView({ chain, chains, onExpirationChange }: 
             </div>
             <div className="border border-t-0 border-gray-200 dark:border-gray-700 rounded-b-lg p-4">
               {/* Header */}
-              <div className="grid grid-cols-8 gap-2 p-2 text-xs font-semibold text-gray-600 dark:text-gray-400 border-b border-gray-300 dark:border-gray-600 mb-2">
+              <div className="grid grid-cols-9 gap-2 p-2 text-xs font-semibold text-gray-600 dark:text-gray-400 border-b border-gray-300 dark:border-gray-600 mb-2">
                 <div className="text-right">Bid</div>
                 <div className="text-right">Ask</div>
                 <div className="text-right">Last</div>
@@ -120,6 +141,7 @@ export default function OptionsChainView({ chain, chains, onExpirationChange }: 
                 <div className="text-right">IV</div>
                 <div className="text-right">Delta</div>
                 <div className="text-right">Gamma</div>
+                <div className="text-center">Calc</div>
               </div>
 
               {/* Contracts */}
@@ -136,7 +158,7 @@ export default function OptionsChainView({ chain, chains, onExpirationChange }: 
             </div>
             <div className="border border-t-0 border-gray-200 dark:border-gray-700 rounded-b-lg p-4">
               {/* Header */}
-              <div className="grid grid-cols-8 gap-2 p-2 text-xs font-semibold text-gray-600 dark:text-gray-400 border-b border-gray-300 dark:border-gray-600 mb-2">
+              <div className="grid grid-cols-9 gap-2 p-2 text-xs font-semibold text-gray-600 dark:text-gray-400 border-b border-gray-300 dark:border-gray-600 mb-2">
                 <div className="text-right">Bid</div>
                 <div className="text-right">Ask</div>
                 <div className="text-right">Last</div>
@@ -145,6 +167,7 @@ export default function OptionsChainView({ chain, chains, onExpirationChange }: 
                 <div className="text-right">IV</div>
                 <div className="text-right">Delta</div>
                 <div className="text-right">Gamma</div>
+                <div className="text-center">Calc</div>
               </div>
 
               {/* Contracts */}
@@ -176,6 +199,29 @@ export default function OptionsChainView({ chain, chains, onExpirationChange }: 
           </div>
         </div>
       </div>
+
+      {/* Position Sizing Calculator Modal */}
+      {showCalculator && selectedContract && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
+          <div className="bg-white dark:bg-gray-800 rounded-lg max-w-6xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-4 flex justify-between items-center">
+              <h2 className="text-xl font-bold">Position Sizing Calculator</h2>
+              <button
+                onClick={() => setShowCalculator(false)}
+                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+              >
+                <span className="text-2xl">&times;</span>
+              </button>
+            </div>
+            <div className="p-6">
+              <PositionSizingCalculator
+                contract={selectedContract}
+                underlyingPrice={chain.underlyingPrice}
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
