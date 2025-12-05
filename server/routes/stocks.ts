@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { getQuote, getTimeSeries, searchSymbol, getProfile } from '../services/twelveData';
 import { getAllIndicators } from '../services/indicators';
 import { calculateSignalAnalysis } from '../services/scoring';
+import { cacheMiddleware, CacheTTL } from '../services/redis';
 
 const router = Router();
 
@@ -22,8 +23,8 @@ router.get('/search', async (req, res) => {
   }
 });
 
-// Get stock quote
-router.get('/:symbol/quote', async (req, res) => {
+// Get stock quote (cached for 1 minute)
+router.get('/:symbol/quote', cacheMiddleware(CacheTTL.stockQuote), async (req, res) => {
   try {
     const { symbol } = req.params;
     const quote = await getQuote(symbol.toUpperCase());
@@ -65,8 +66,8 @@ router.get('/:symbol/indicators', async (req, res) => {
   }
 });
 
-// Get complete analysis with signals
-router.get('/:symbol/analysis', async (req, res) => {
+// Get complete analysis with signals (cached for 5 minutes)
+router.get('/:symbol/analysis', cacheMiddleware(CacheTTL.stockAnalysis), async (req, res) => {
   try {
     const { symbol } = req.params;
     const symbolUpper = symbol.toUpperCase();
@@ -99,8 +100,8 @@ router.get('/:symbol/analysis', async (req, res) => {
   }
 });
 
-// Get stock profile/company info
-router.get('/:symbol/profile', async (req, res) => {
+// Get stock profile/company info (cached for 1 hour)
+router.get('/:symbol/profile', cacheMiddleware(CacheTTL.fundamentals), async (req, res) => {
   try {
     const { symbol } = req.params;
     const profile = await getProfile(symbol.toUpperCase());
