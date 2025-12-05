@@ -73,10 +73,10 @@ export default function Discover() {
 
   // Add to watchlist mutation
   const addToWatchlistMutation = useMutation({
-    mutationFn: async (symbol: string) => {
-      await axios.post(`${API_BASE_URL}/api/watchlist`, { symbol });
+    mutationFn: async ({ symbol, name }: { symbol: string; name: string }) => {
+      await axios.post(`${API_BASE_URL}/api/watchlist`, { symbol, name });
     },
-    onSuccess: (_, symbol) => {
+    onSuccess: (_, { symbol }) => {
       toast.success(`${symbol} added to watchlist!`);
     },
     onError: (error: any) => {
@@ -209,7 +209,7 @@ export default function Discover() {
                     </div>
 
                     <button
-                      onClick={() => addToWatchlistMutation.mutate(result.symbol)}
+                      onClick={() => addToWatchlistMutation.mutate({ symbol: result.symbol, name: result.symbol })}
                       className="px-3 py-2 bg-green-600 text-white rounded text-sm font-medium hover:bg-green-700 flex items-center gap-2"
                     >
                       <Plus className="w-4 h-4" />
