@@ -31,6 +31,7 @@ import economyRouter from './routes/economy';
 import discoveryRouter from './routes/discovery';
 import optionsIdeasRouter from './routes/optionsIdeas';
 import optionsFlowRouter from './routes/optionsFlow';
+import tradingRouter from './routes/trading';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -134,6 +135,7 @@ app.use('/api/economy', economyRouter);
 app.use('/api/discovery', discoveryRouter);
 app.use('/api/options-ideas', optionsIdeasRouter);
 app.use('/api/options-flow', optionsFlowRouter);
+app.use('/api/trading', tradingRouter);
 
 // Error logging middleware
 app.use(errorLogger);
