@@ -99,7 +99,7 @@ export async function validateTrade(trade: TradeIdea): Promise<ValidationResult>
     const [patterns, sentiment, prediction] = await Promise.all([
       Promise.resolve(detectAllPatterns(timeSeries)).catch(() => []),
       Promise.resolve(calculateTechnicalSentiment(timeSeries)).catch(() => null),
-      generatePricePrediction(timeSeries).catch(() => null),
+      Promise.resolve(generatePricePrediction(timeSeries)).catch(() => null),
     ]);
 
     // Calculate risk/reward metrics

@@ -240,7 +240,7 @@ async function generateAIAlertReasoning(alert: any, currentValue: string): Promi
     const [patterns, sentiment, prediction] = await Promise.all([
       Promise.resolve(detectAllPatterns(timeSeries)).catch(() => []),
       Promise.resolve(calculateTechnicalSentiment(timeSeries)).catch(() => null),
-      generatePricePrediction(timeSeries).catch(() => null),
+      Promise.resolve(generatePricePrediction(timeSeries)).catch(() => null),
     ]);
 
     // Build AI reasoning message
