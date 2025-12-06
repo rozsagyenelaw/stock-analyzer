@@ -53,6 +53,8 @@ interface DailyRecommendations {
   aiInsights: string;
 }
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+
 const DailyPicks: React.FC = () => {
   const [recommendations, setRecommendations] = useState<DailyRecommendations | null>(null);
   const [loading, setLoading] = useState(true);
@@ -75,9 +77,8 @@ const DailyPicks: React.FC = () => {
         minScore: '60',
       });
 
-      const url = `/api/daily-picks?${params}`;
+      const url = `${API_BASE_URL}/api/daily-picks?${params}`;
       console.log('[DailyPicks] Fetching from:', url);
-      console.log('[DailyPicks] Full URL:', window.location.origin + url);
 
       const response = await fetch(url);
       console.log('[DailyPicks] Response status:', response.status);
