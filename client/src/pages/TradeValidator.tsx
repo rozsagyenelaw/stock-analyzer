@@ -10,8 +10,6 @@ import {
   TrendingDown,
   BarChart3,
   Clock,
-  DollarSign,
-  Percent,
   MinusCircle
 } from 'lucide-react';
 import toast from 'react-hot-toast';

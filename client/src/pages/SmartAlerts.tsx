@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useQuery, useMutation } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import {
   Lightbulb,
   Sparkles,
@@ -59,7 +59,7 @@ export default function SmartAlerts() {
   });
 
   // Fetch suggestions for a symbol
-  const { data: suggestionsData, isLoading: loadingSuggestions, refetch: fetchSuggestions } = useQuery({
+  const { data: suggestionsData, isLoading: loadingSuggestions } = useQuery({
     queryKey: ['alert-suggestions', selectedSymbol],
     queryFn: async () => {
       if (!selectedSymbol) return null;
