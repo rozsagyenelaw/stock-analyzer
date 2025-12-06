@@ -100,14 +100,14 @@ export async function getDailyRecommendations(options: ScanOptions = {}): Promis
   if (categories.includes('stock_trade')) {
     const stockRecommendations = await scanStockTrades(accountSize, riskLevel);
     allRecommendations.push(...stockRecommendations);
-    totalScanned += 150; // Approximate stocks scanned
+    totalScanned += 30; // Top 30 stocks scanned
   }
 
   // Scan Options Trades
   if (categories.includes('options_trade')) {
     const optionsRecommendations = await scanOptionsTrades(accountSize, riskLevel);
     allRecommendations.push(...optionsRecommendations);
-    totalScanned += 150;
+    totalScanned += 10; // Top 10 symbols for options
   }
 
   // Filter by minimum score
@@ -158,12 +158,17 @@ async function scanStockTrades(accountSize: number, riskLevel: string): Promise<
   try {
     console.log('📊 Scanning stock trade strategies...');
 
+    // Limit to top 30 stocks to avoid API rate limits
+    const topStocks = ['AAPL', 'MSFT', 'GOOGL', 'AMZN', 'NVDA', 'META', 'TSLA', 'AMD', 'NFLX', 'INTC',
+                       'SPY', 'QQQ', 'DIA', 'IWM', 'PLTR', 'SOFI', 'NIO', 'F', 'BAC', 'SNAP',
+                       'PINS', 'RBLX', 'UBER', 'LYFT', 'HOOD', 'SQ', 'COIN', 'DKNG', 'RIOT', 'MARA'];
+
     // Run all 4 stock trade scanners in parallel
     const [momentum, oversold, macd, pullback] = await Promise.all([
-      scanMomentumBreakouts({ minPrice: 5, maxPrice: 300, accountSize }).catch(() => []),
-      scanOversoldBounce({ minPrice: 5, maxPrice: 300, accountSize }).catch(() => []),
-      scanMACDCrossover({ minPrice: 5, maxPrice: 300, accountSize }).catch(() => []),
-      scanPullbackPlay({ minPrice: 5, maxPrice: 300, accountSize }).catch(() => []),
+      scanMomentumBreakouts({ minPrice: 5, maxPrice: 300, accountSize, symbols: topStocks }).catch(() => []),
+      scanOversoldBounce({ minPrice: 5, maxPrice: 300, accountSize, symbols: topStocks }).catch(() => []),
+      scanMACDCrossover({ minPrice: 5, maxPrice: 300, accountSize, symbols: topStocks }).catch(() => []),
+      scanPullbackPlay({ minPrice: 5, maxPrice: 300, accountSize, symbols: topStocks }).catch(() => []),
     ]);
 
     // Convert to unified format

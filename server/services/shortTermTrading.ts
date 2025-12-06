@@ -40,6 +40,7 @@ interface ScanFilters {
   maxPrice?: number;
   minVolume?: number;
   accountSize?: number;
+  symbols?: string[]; // Override symbol list
 }
 
 /**
@@ -130,6 +131,11 @@ function findSupportResistance(prices: number[]): { support: number; resistance:
  * Get list of stocks to scan (popular stocks across various price ranges)
  */
 function getAffordableStocks(filters: ScanFilters): string[] {
+  // If symbols are provided in filters, use them directly
+  if (filters.symbols && filters.symbols.length > 0) {
+    return filters.symbols;
+  }
+
   // Popular stocks in different price ranges for screening
   // This includes stocks from $5-$300+ to give flexibility
   const stockUniverse = [
