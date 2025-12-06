@@ -136,7 +136,11 @@ try {
 
 // Health check endpoint
 app.get('/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+  res.json({
+    status: 'ok',
+    timestamp: new Date().toISOString(),
+    version: '1.0.1' // Added to force cache bust
+  });
 });
 
 // DEBUG: Log ALL requests
