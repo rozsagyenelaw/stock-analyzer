@@ -74,7 +74,7 @@ export async function generateAlertSuggestions(symbol: string): Promise<AlertSug
     // Detect patterns and sentiment
     const [patterns, sentiment] = await Promise.all([
       Promise.resolve(detectAllPatterns(timeSeries)).catch(() => []),
-      calculateTechnicalSentiment(timeSeries).catch(() => null),
+      Promise.resolve(calculateTechnicalSentiment(timeSeries)).catch(() => null),
     ]);
 
     // 1. Support/Resistance Levels

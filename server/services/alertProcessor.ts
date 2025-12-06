@@ -239,7 +239,7 @@ async function generateAIAlertReasoning(alert: any, currentValue: string): Promi
     // Run AI analyses in parallel
     const [patterns, sentiment, prediction] = await Promise.all([
       Promise.resolve(detectAllPatterns(timeSeries)).catch(() => []),
-      calculateTechnicalSentiment(timeSeries).catch(() => null),
+      Promise.resolve(calculateTechnicalSentiment(timeSeries)).catch(() => null),
       generatePricePrediction(timeSeries).catch(() => null),
     ]);
 
