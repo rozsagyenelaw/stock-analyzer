@@ -2,9 +2,6 @@ import { useState } from 'react';
 import {
   Plus,
   Trash2,
-  TrendingUp,
-  Target,
-  DollarSign,
   BarChart3
 } from 'lucide-react';
 import toast from 'react-hot-toast';
