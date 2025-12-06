@@ -2,7 +2,7 @@ services:
   - type: web
     name: stock-analyzer
     env: node
-    buildCommand: npm install && npm run build
+    buildCommand: npm install && npm run build && ls -la server/dist/routes/ && grep -n "dailyPicks" server/dist/server.js
     startCommand: npm start
     envVars:
       - key: NODE_VERSION
