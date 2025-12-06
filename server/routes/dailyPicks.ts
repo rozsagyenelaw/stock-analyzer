@@ -1,5 +1,6 @@
 import express from 'express';
 import { getDailyRecommendations, ScanOptions } from '../services/dailyRecommendations';
+import { getPerformanceStats, getRecentRecommendations } from '../services/performanceTracking';
 
 const router = express.Router();
 
@@ -67,6 +68,40 @@ router.get('/quick', async (req, res) => {
     });
   } catch (error: any) {
     console.error('Error fetching quick picks:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/**
+ * GET /api/daily-picks/performance
+ * Get performance statistics for Daily Picks recommendations
+ */
+router.get('/performance', async (req, res) => {
+  try {
+    const { days } = req.query;
+    const dayCount = days ? parseInt(days as string) : 30;
+
+    const stats = getPerformanceStats(dayCount);
+    res.json(stats);
+  } catch (error: any) {
+    console.error('Error fetching performance stats:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/**
+ * GET /api/daily-picks/history
+ * Get recent recommendations with outcomes
+ */
+router.get('/history', async (req, res) => {
+  try {
+    const { days } = req.query;
+    const dayCount = days ? parseInt(days as string) : 30;
+
+    const recommendations = getRecentRecommendations(dayCount);
+    res.json({ recommendations });
+  } catch (error: any) {
+    console.error('Error fetching recommendation history:', error);
     res.status(500).json({ error: error.message });
   }
 });

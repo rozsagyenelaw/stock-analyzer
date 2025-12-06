@@ -14,6 +14,9 @@ import logger from './services/logger';
 import redisService from './services/redis';
 import { initializeUsersTable } from './services/auth';
 import { httpLogger, requestTracker, errorLogger } from './middleware/logging';
+import { initializeStockUniverse } from './services/stockUniverse';
+import { initializePerformanceTracking } from './services/performanceTracking';
+import { initializeScheduler } from './services/scheduler';
 
 // Import routes
 import authRouter from './routes/auth';
@@ -135,6 +138,32 @@ try {
   logger.info('✓ Email service initialized');
 } catch (error) {
   logger.warn('Email service initialization failed:', error);
+}
+
+// Initialize stock universe
+try {
+  initializeStockUniverse();
+  logger.info('✓ Stock universe initialized');
+} catch (error) {
+  logger.error('Stock universe initialization failed:', error);
+}
+
+// Initialize performance tracking
+try {
+  initializePerformanceTracking();
+  logger.info('✓ Performance tracking initialized');
+} catch (error) {
+  logger.error('Performance tracking initialization failed:', error);
+}
+
+// Initialize scheduled jobs (cron)
+if (process.env.NODE_ENV !== 'test') {
+  try {
+    initializeScheduler();
+    logger.info('✓ Scheduled jobs initialized');
+  } catch (error) {
+    logger.error('Scheduler initialization failed:', error);
+  }
 }
 
 // Health check endpoint
