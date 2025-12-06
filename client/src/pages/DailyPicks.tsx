@@ -62,6 +62,9 @@ const DailyPicks: React.FC = () => {
   const [categoryFilter, setCategoryFilter] = useState<'all' | 'stock_trade' | 'options_trade'>('all');
   const [accountSize, setAccountSize] = useState(10000);
   const [riskLevel, setRiskLevel] = useState<'conservative' | 'moderate' | 'aggressive'>('moderate');
+  const [priceRange, setPriceRange] = useState<'all' | 'under25' | '25to100' | '100to250'>('all');
+  const [setupType, setSetupType] = useState<'all' | 'oversold' | 'breakout' | 'macd' | 'pullback'>('all');
+  const [minScore, setMinScore] = useState(60);
 
   useEffect(() => {
     fetchRecommendations();
@@ -101,9 +104,32 @@ const DailyPicks: React.FC = () => {
     }
   };
 
-  const filteredPicks = recommendations?.topPicks.filter(pick =>
-    categoryFilter === 'all' || pick.category === categoryFilter
-  ) || [];
+  const filteredPicks = recommendations?.topPicks.filter(pick => {
+    // Category filter
+    if (categoryFilter !== 'all' && pick.category !== categoryFilter) return false;
+
+    // Price range filter
+    if (priceRange !== 'all') {
+      const price = pick.currentPrice;
+      if (priceRange === 'under25' && price >= 25) return false;
+      if (priceRange === '25to100' && (price < 25 || price >= 100)) return false;
+      if (priceRange === '100to250' && (price < 100 || price > 250)) return false;
+    }
+
+    // Setup type filter
+    if (setupType !== 'all') {
+      const strategyLower = pick.strategyType.toLowerCase();
+      if (setupType === 'oversold' && !strategyLower.includes('oversold') && !strategyLower.includes('bounce')) return false;
+      if (setupType === 'breakout' && !strategyLower.includes('breakout')) return false;
+      if (setupType === 'macd' && !strategyLower.includes('macd')) return false;
+      if (setupType === 'pullback' && !strategyLower.includes('pullback')) return false;
+    }
+
+    // Min score filter
+    if (pick.aiScore < minScore) return false;
+
+    return true;
+  }) || [];
 
   const getScoreColor = (score: number) => {
     if (score >= 80) return 'text-green-600 bg-green-50';
@@ -157,10 +183,15 @@ const DailyPicks: React.FC = () => {
             <div>
               <h1 className="text-3xl font-bold text-gray-900 flex items-center">
                 <Sparkles className="h-8 w-8 text-yellow-500 mr-3" />
-                AI Daily Trade Recommendations
+                Today's Top Trades
               </h1>
-              <p className="text-gray-600 mt-2">
-                AI-powered analysis of today's best trading opportunities
+              <p className="text-gray-600 mt-2 flex items-center gap-4">
+                <span className="flex items-center">
+                  <Clock className="h-4 w-4 mr-1" />
+                  Last scanned: {new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true, timeZone: 'America/New_York' })} ET
+                </span>
+                <span>•</span>
+                <span>Universe: {recommendations?.summary.totalScanned || 0} stocks scanned</span>
               </p>
             </div>
             <div className="text-right">
@@ -209,7 +240,53 @@ const DailyPicks: React.FC = () => {
 
         {/* Filters */}
         <div className="bg-white rounded-lg shadow p-6 mb-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Filter Trades</h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Price Range
+              </label>
+              <select
+                value={priceRange}
+                onChange={(e) => setPriceRange(e.target.value as any)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+              >
+                <option value="all">All Prices</option>
+                <option value="under25">Under $25</option>
+                <option value="25to100">$25 - $100</option>
+                <option value="100to250">$100 - $250</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Setup Type
+              </label>
+              <select
+                value={setupType}
+                onChange={(e) => setSetupType(e.target.value as any)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+              >
+                <option value="all">All Setups</option>
+                <option value="oversold">Oversold</option>
+                <option value="breakout">Breakout</option>
+                <option value="macd">MACD</option>
+                <option value="pullback">Pullback</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Min Score
+              </label>
+              <select
+                value={minScore}
+                onChange={(e) => setMinScore(Number(e.target.value))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+              >
+                <option value={60}>60+</option>
+                <option value={70}>70+</option>
+                <option value={80}>80+</option>
+              </select>
+            </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Account Size
@@ -217,12 +294,13 @@ const DailyPicks: React.FC = () => {
               <select
                 value={accountSize}
                 onChange={(e) => setAccountSize(Number(e.target.value))}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
               >
+                <option value={500}>$500</option>
+                <option value={1000}>$1,000</option>
+                <option value={2500}>$2,500</option>
                 <option value={5000}>$5,000</option>
                 <option value={10000}>$10,000</option>
-                <option value={25000}>$25,000</option>
-                <option value={50000}>$50,000</option>
               </select>
             </div>
             <div>
@@ -232,7 +310,7 @@ const DailyPicks: React.FC = () => {
               <select
                 value={riskLevel}
                 onChange={(e) => setRiskLevel(e.target.value as any)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
               >
                 <option value="conservative">Conservative</option>
                 <option value="moderate">Moderate</option>
@@ -241,18 +319,21 @@ const DailyPicks: React.FC = () => {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Category Filter
+                Category
               </label>
               <select
                 value={categoryFilter}
                 onChange={(e) => setCategoryFilter(e.target.value as any)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
               >
-                <option value="all">All Trades</option>
-                <option value="stock_trade">Stock Trades Only</option>
-                <option value="options_trade">Options Only</option>
+                <option value="all">All</option>
+                <option value="stock_trade">Stocks</option>
+                <option value="options_trade">Options</option>
               </select>
             </div>
+          </div>
+          <div className="mt-4 text-sm text-gray-600">
+            Showing {filteredPicks.length} of {recommendations?.topPicks.length || 0} trades
           </div>
         </div>
 
