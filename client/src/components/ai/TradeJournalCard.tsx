@@ -146,53 +146,55 @@ export default function TradeJournalCard() {
       </div>
 
       {/* Patterns */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-        <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-          <h3 className="font-semibold mb-3 text-blue-800 dark:text-blue-200">Winning Patterns</h3>
-          <ul className="space-y-2">
-            {analysis.patterns.winningPatterns.map((pattern: string, idx: number) => (
-              <li key={idx} className="text-sm text-blue-800 dark:text-blue-200 flex items-start gap-2">
-                <TrendingUp className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                <span>{pattern}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
+      {analysis.patterns && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+          <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+            <h3 className="font-semibold mb-3 text-blue-800 dark:text-blue-200">Winning Patterns</h3>
+            <ul className="space-y-2">
+              {analysis.patterns.winningPatterns?.map((pattern: string, idx: number) => (
+                <li key={idx} className="text-sm text-blue-800 dark:text-blue-200 flex items-start gap-2">
+                  <TrendingUp className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                  <span>{pattern}</span>
+                </li>
+              )) || <li className="text-sm text-gray-500">No patterns identified yet</li>}
+            </ul>
+          </div>
 
-        <div className="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg p-4">
-          <h3 className="font-semibold mb-3 text-orange-800 dark:text-orange-200">Losing Patterns</h3>
-          <ul className="space-y-2">
-            {analysis.patterns.losingPatterns.map((pattern: string, idx: number) => (
-              <li key={idx} className="text-sm text-orange-800 dark:text-orange-200 flex items-start gap-2">
-                <TrendingDown className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                <span>{pattern}</span>
-              </li>
-            ))}
-          </ul>
+          <div className="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg p-4">
+            <h3 className="font-semibold mb-3 text-orange-800 dark:text-orange-200">Losing Patterns</h3>
+            <ul className="space-y-2">
+              {analysis.patterns.losingPatterns?.map((pattern: string, idx: number) => (
+                <li key={idx} className="text-sm text-orange-800 dark:text-orange-200 flex items-start gap-2">
+                  <TrendingDown className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                  <span>{pattern}</span>
+                </li>
+              )) || <li className="text-sm text-gray-500">No patterns identified yet</li>}
+            </ul>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Strengths & Weaknesses */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
         <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
           <h3 className="font-semibold mb-3 text-green-800 dark:text-green-200">Your Strengths</h3>
           <ul className="space-y-2">
-            {analysis.strengths.map((strength: string, idx: number) => (
+            {analysis.strengths?.map((strength: string, idx: number) => (
               <li key={idx} className="text-sm text-green-800 dark:text-green-200">
                 ✓ {strength}
               </li>
-            ))}
+            )) || <li className="text-sm text-gray-500">Add more trades to identify strengths</li>}
           </ul>
         </div>
 
         <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
           <h3 className="font-semibold mb-3 text-yellow-800 dark:text-yellow-200">Areas to Improve</h3>
           <ul className="space-y-2">
-            {analysis.weaknesses.map((weakness: string, idx: number) => (
+            {analysis.weaknesses?.map((weakness: string, idx: number) => (
               <li key={idx} className="text-sm text-yellow-800 dark:text-yellow-200">
                 → {weakness}
               </li>
-            ))}
+            )) || <li className="text-sm text-gray-500">Add more trades to identify areas to improve</li>}
           </ul>
         </div>
       </div>
