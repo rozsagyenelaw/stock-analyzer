@@ -22,6 +22,8 @@ import {
   Star,
   DollarSign,
   Award,
+  Shield,
+  Lightbulb,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import toast from 'react-hot-toast';
@@ -65,6 +67,9 @@ export default function Layout({ children }: LayoutProps) {
     { name: 'Trade Journal AI', href: '/ai/trade-journal', icon: Brain },
     { name: 'Earnings Analyzer', href: '/ai/earnings', icon: Calendar },
     { name: 'Greeks Monitor', href: '/ai/greeks', icon: Activity },
+    { name: 'Trade Validator', href: '/trade-validator', icon: Shield },
+    { name: 'Trade Comparison', href: '/trade-comparison', icon: BarChart3 },
+    { name: 'Smart Alerts', href: '/smart-alerts', icon: Lightbulb },
   ];
 
   const isActive = (path: string) => {
