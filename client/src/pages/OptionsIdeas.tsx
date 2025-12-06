@@ -66,7 +66,7 @@ export default function OptionsIdeas() {
   const [useAI, setUseAI] = useState(false);
 
   // Fetch available strategies
-  const { data: strategies = [], isLoading: strategiesLoading } = useQuery({
+  const { data: strategies = [] } = useQuery({
     queryKey: ['options-strategies'],
     queryFn: async () => {
       const response = await axios.get(`${API_BASE_URL}/api/options-ideas/strategies`);
