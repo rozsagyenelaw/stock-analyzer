@@ -34,6 +34,7 @@ import optionsIdeasRouter from './routes/optionsIdeas';
 import optionsFlowRouter from './routes/optionsFlow';
 import tradingRouter from './routes/trading';
 import tradeIdeasRouter from './routes/tradeIdeas';
+import dailyPicksRouter from './routes/dailyPicks';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -142,6 +143,7 @@ app.use('/api/options-ideas', optionsIdeasRouter);
 app.use('/api/options-flow', optionsFlowRouter);
 app.use('/api/trading', tradingRouter);
 app.use('/api/trade-ideas', tradeIdeasRouter);
+app.use('/api/daily-picks', dailyPicksRouter);
 
 // Error logging middleware
 app.use(errorLogger);

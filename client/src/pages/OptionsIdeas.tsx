@@ -58,18 +58,19 @@ interface OptionSuggestion {
 }
 
 export default function OptionsIdeas() {
-  const [selectedCategory, setSelectedCategory] = useState<'sell_premium' | 'buy_options'>('sell_premium');
-  const [selectedStrategy, setSelectedStrategy] = useState<string>('cash-secured-puts');
+  const [selectedCategory, setSelectedCategory] = useState<'sell_premium' | 'buy_options' | null>(null);
+  const [selectedStrategy, setSelectedStrategy] = useState<string>('');
   const [accountSize, setAccountSize] = useState<string>('10000');
   const [riskLevel, setRiskLevel] = useState<'conservative' | 'moderate' | 'aggressive'>('moderate');
   const [expandedCard, setExpandedCard] = useState<string | null>(null);
   const [useAI, setUseAI] = useState(false);
 
   // Fetch available strategies
-  const { data: strategies = [] } = useQuery({
+  const { data: strategies = [], isLoading: strategiesLoading } = useQuery({
     queryKey: ['options-strategies'],
     queryFn: async () => {
       const response = await axios.get(`${API_BASE_URL}/api/options-ideas/strategies`);
+      console.log('Strategies loaded:', response.data);
       return response.data as Strategy[];
     },
   });
@@ -82,6 +83,7 @@ export default function OptionsIdeas() {
   } = useQuery({
     queryKey: ['options-suggestions', selectedStrategy, accountSize, riskLevel, useAI],
     queryFn: async () => {
+      console.log('Scanning with strategy:', selectedStrategy, 'account:', accountSize, 'risk:', riskLevel);
       const response = await axios.get(
         `${API_BASE_URL}/api/options-ideas/scan/${selectedStrategy}`,
         {
@@ -92,14 +94,26 @@ export default function OptionsIdeas() {
           },
         }
       );
+      console.log('Scan results:', response.data);
       return response.data;
     },
     enabled: false, // Don't auto-fetch, wait for user to click "Scan"
   });
 
-  const filteredStrategies = strategies.filter((s: Strategy) => s.category === selectedCategory);
+  const filteredStrategies = selectedCategory
+    ? strategies.filter((s: Strategy) => s.category === selectedCategory)
+    : [];
+  console.log('=== FILTER DEBUG ===');
+  console.log('All strategies:', strategies);
+  console.log('Selected category:', selectedCategory);
+  console.log('Filtered strategies:', filteredStrategies);
+  console.log('===================');
 
   const handleScan = () => {
+    if (!selectedCategory || !selectedStrategy) {
+      toast.error('Please select a strategy type first');
+      return;
+    }
     if (!accountSize || parseFloat(accountSize) <= 0) {
       toast.error('Please enter a valid account size');
       return;
@@ -141,8 +155,13 @@ export default function OptionsIdeas() {
             <div className="flex gap-2">
               <button
                 onClick={() => {
+                  console.log('=== SELL PREMIUM BUTTON CLICKED ===');
                   setSelectedCategory('sell_premium');
-                  setSelectedStrategy('cash-secured-puts');
+                  const sellStrategies = strategies.filter(s => s.category === 'sell_premium');
+                  if (sellStrategies.length > 0) {
+                    console.log('Setting strategy to:', sellStrategies[0].id);
+                    setSelectedStrategy(sellStrategies[0].id);
+                  }
                 }}
                 className={`flex-1 px-3 py-2 rounded text-sm font-medium transition ${
                   selectedCategory === 'sell_premium'
@@ -155,8 +174,13 @@ export default function OptionsIdeas() {
               </button>
               <button
                 onClick={() => {
+                  console.log('=== BUY OPTIONS BUTTON CLICKED ===');
                   setSelectedCategory('buy_options');
-                  setSelectedStrategy('long-calls-breakout');
+                  const buyStrategies = strategies.filter(s => s.category === 'buy_options');
+                  if (buyStrategies.length > 0) {
+                    console.log('Setting strategy to:', buyStrategies[0].id);
+                    setSelectedStrategy(buyStrategies[0].id);
+                  }
                 }}
                 className={`flex-1 px-3 py-2 rounded text-sm font-medium transition ${
                   selectedCategory === 'buy_options'

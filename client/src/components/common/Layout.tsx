@@ -21,6 +21,7 @@ import {
   ChevronDown,
   Star,
   DollarSign,
+  Award,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import toast from 'react-hot-toast';
@@ -44,6 +45,7 @@ export default function Layout({ children }: LayoutProps) {
 
   const navigation = [
     { name: 'Dashboard', href: '/', icon: LayoutDashboard },
+    { name: 'Daily Picks', href: '/daily-picks', icon: Award },
     { name: 'Discover', href: '/discover', icon: Sparkles },
     { name: 'Watchlist', href: '/watchlist', icon: Star },
     { name: 'Screener', href: '/screener', icon: Filter },

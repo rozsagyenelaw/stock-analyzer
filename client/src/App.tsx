@@ -22,6 +22,7 @@ import GreeksMonitor from './pages/GreeksMonitor';
 import OptionsIdeas from './pages/OptionsIdeas';
 import OptionsFlow from './pages/OptionsFlow';
 import TradeIdeas from './pages/TradeIdeas';
+import DailyPicks from './pages/DailyPicks';
 import Layout from './components/common/Layout';
 
 function App() {
@@ -50,6 +51,7 @@ function App() {
                     <Route path="/options-ideas" element={<OptionsIdeas />} />
                     <Route path="/options-flow" element={<OptionsFlow />} />
                     <Route path="/trade-ideas" element={<TradeIdeas />} />
+                    <Route path="/daily-picks" element={<DailyPicks />} />
 
                     {/* Auth-required routes */}
                     <Route

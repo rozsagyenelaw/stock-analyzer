@@ -2,8 +2,20 @@ services:
   - type: web
     name: stock-analyzer
     env: node
-    buildCommand: npm install && cd client && npm install && cd ../server && npm install && cd .. && npm run build
+    buildCommand: npm install && npm run build
     startCommand: npm start
     envVars:
       - key: NODE_VERSION
         value: 22.16.0
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3001
+      - key: POLYGON_API_KEY
+        sync: false
+      - key: TWELVE_API_KEY
+        sync: false
+    disk:
+      name: stock-analyzer-data
+      mountPath: /app/server/database
+      sizeGB: 1
