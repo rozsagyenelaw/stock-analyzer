@@ -35,7 +35,22 @@ import optionsIdeasRouter from './routes/optionsIdeas';
 import optionsFlowRouter from './routes/optionsFlow';
 import tradingRouter from './routes/trading';
 import tradeIdeasRouter from './routes/tradeIdeas';
-import dailyPicksRouter from './routes/dailyPicks';
+
+// Import dailyPicks with explicit error handling
+let dailyPicksRouter: any;
+try {
+  dailyPicksRouter = require('./routes/dailyPicks').default;
+  console.log('[SERVER] ✓ dailyPicks router imported successfully');
+} catch (error: any) {
+  console.error('[SERVER] ✗ FAILED to import dailyPicks router:', error.message);
+  console.error('[SERVER] Stack:', error.stack);
+  // Create a dummy router that returns error
+  const express = require('express');
+  dailyPicksRouter = express.Router();
+  dailyPicksRouter.get('*', (req: any, res: any) => {
+    res.status(500).json({ error: 'dailyPicks module failed to load', details: error.message });
+  });
+}
 
 const app = express();
 const PORT = process.env.PORT || 3001;
