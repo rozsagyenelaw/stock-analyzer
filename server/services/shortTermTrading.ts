@@ -127,24 +127,81 @@ function findSupportResistance(prices: number[]): { support: number; resistance:
 }
 
 /**
- * Get affordable stocks for trading (database query)
+ * Get list of stocks to scan (popular stocks across various price ranges)
  */
 function getAffordableStocks(filters: ScanFilters): string[] {
-  const minPrice = filters.minPrice || 5;
-  const maxPrice = filters.maxPrice || 50;
+  // Popular stocks in different price ranges for screening
+  // This includes stocks from $5-$300+ to give flexibility
+  const stockUniverse = [
+    // Tech stocks (various prices)
+    'AAPL', 'MSFT', 'GOOGL', 'META', 'NVDA', 'AMD', 'INTC', 'PLTR', 'SOFI', 'NIO',
 
-  const stocks = db
-    .prepare(
-      `
-    SELECT symbol FROM stock_universe
-    WHERE is_active = 1
-    ORDER BY market_cap DESC
-    LIMIT 100
-  `
-    )
-    .all() as { symbol: string }[];
+    // Affordable tech & growth
+    'F', 'BAC', 'SNAP', 'PINS', 'RBLX', 'UBER', 'LYFT', 'OPEN', 'HOOD', 'SQ',
 
-  return stocks.map(s => s.symbol);
+    // Energy
+    'XOM', 'CVX', 'BP', 'COP', 'OXY', 'SLB', 'HAL', 'MRO', 'DVN', 'FANG',
+
+    // Finance
+    'JPM', 'WFC', 'GS', 'MS', 'C', 'USB', 'PNC', 'TFC', 'ALLY', 'SOFI',
+
+    // Healthcare
+    'JNJ', 'PFE', 'ABBV', 'MRK', 'UNH', 'CVS', 'WBA', 'GILD', 'BIIB', 'VRTX',
+
+    // Consumer
+    'WMT', 'TGT', 'HD', 'LOW', 'COST', 'KO', 'PEP', 'MCD', 'SBUX', 'DIS',
+
+    // EVs & Auto
+    'TSLA', 'RIVN', 'LCID', 'GM', 'FORD', 'NKLA', 'FSR', 'RIDE', 'WKHS', 'GOEV',
+
+    // Meme/Popular
+    'AMC', 'GME', 'BB', 'NOK', 'WISH', 'CLOV', 'SPCE', 'TLRY', 'SNDL', 'PTON',
+
+    // Airlines & Travel
+    'DAL', 'AAL', 'UAL', 'LUV', 'SAVE', 'JBLU', 'ALK', 'CCL', 'NCLH', 'RCL',
+
+    // Retail
+    'AMZN', 'EBAY', 'ETSY', 'W', 'CHWY', 'BBBY', 'M', 'JWN', 'KSS', 'DKS',
+
+    // Semiconductors
+    'TSM', 'ASML', 'QCOM', 'AVGO', 'TXN', 'ADI', 'MRVL', 'MU', 'AMAT', 'LRCX',
+
+    // Software/Cloud
+    'CRM', 'ORCL', 'ADBE', 'NOW', 'SNOW', 'DDOG', 'NET', 'CRWD', 'ZS', 'OKTA',
+
+    // Chinese ADRs
+    'BABA', 'JD', 'PDD', 'BIDU', 'NIO', 'XPEV', 'LI', 'DIDI', 'TME', 'BILI',
+
+    // Biotech
+    'MRNA', 'BNTX', 'REGN', 'AMGN', 'GILD', 'VRTX', 'SGEN', 'EXAS', 'BMRN', 'ALNY',
+
+    // REITs
+    'SPG', 'O', 'PLD', 'AMT', 'CCI', 'EQIX', 'PSA', 'DLR', 'WELL', 'AVB',
+  ];
+
+  // Use database stocks if available, otherwise use universe
+  try {
+    const dbStocks = db
+      .prepare(
+        `
+      SELECT symbol FROM stock_universe
+      WHERE is_active = 1
+      ORDER BY market_cap DESC
+      LIMIT 50
+    `
+      )
+      .all() as { symbol: string }[];
+
+    const dbSymbols = dbStocks.map(s => s.symbol);
+
+    // Combine database stocks with universe, remove duplicates
+    const combined = [...new Set([...dbSymbols, ...stockUniverse])];
+
+    return combined;
+  } catch (error) {
+    // If database fails, use stock universe
+    return stockUniverse;
+  }
 }
 
 /**
