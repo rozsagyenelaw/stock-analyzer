@@ -37,6 +37,7 @@ import tradingRouter from './routes/trading';
 import tradeIdeasRouter from './routes/tradeIdeas';
 import tradeComparisonRouter from './routes/tradeComparison';
 import smartAlertsRouter from './routes/smartAlerts';
+import tradeValidationRouter from './routes/tradeValidation';
 
 // Import dailyPicks with explicit error handling
 let dailyPicksRouter: any;
@@ -174,6 +175,7 @@ app.use('/api/trading', tradingRouter);
 app.use('/api/trade-ideas', tradeIdeasRouter);
 app.use('/api/trade-comparison', tradeComparisonRouter);
 app.use('/api/smart-alerts', smartAlertsRouter);
+app.use('/api/trade-validation', tradeValidationRouter);
 console.log('[SERVER] Registering /api/daily-picks with router:', typeof dailyPicksRouter);
 app.use('/api/daily-picks', dailyPicksRouter);
 console.log('[SERVER] ✓ All routes registered');
