@@ -131,6 +131,7 @@ app.use((req, res, next) => {
 });
 
 // API routes
+console.log('[SERVER] Registering API routes...');
 app.use('/api/auth', authRouter); // Authentication routes (no auth required)
 app.use('/api/stocks', stocksRouter);
 app.use('/api/watchlist', watchlistRouter);
@@ -150,7 +151,9 @@ app.use('/api/options-ideas', optionsIdeasRouter);
 app.use('/api/options-flow', optionsFlowRouter);
 app.use('/api/trading', tradingRouter);
 app.use('/api/trade-ideas', tradeIdeasRouter);
+console.log('[SERVER] Registering /api/daily-picks with router:', typeof dailyPicksRouter);
 app.use('/api/daily-picks', dailyPicksRouter);
+console.log('[SERVER] ✓ All routes registered');
 
 // Error logging middleware
 app.use(errorLogger);
