@@ -97,7 +97,7 @@ export async function validateTrade(trade: TradeIdea): Promise<ValidationResult>
 
     // Run AI analyses in parallel
     const [patterns, sentiment, prediction] = await Promise.all([
-      detectAllPatterns(timeSeries).catch(() => []),
+      Promise.resolve(detectAllPatterns(timeSeries)).catch(() => []),
       calculateTechnicalSentiment(timeSeries).catch(() => null),
       generatePricePrediction(timeSeries).catch(() => null),
     ]);

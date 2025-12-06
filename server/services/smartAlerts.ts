@@ -73,7 +73,7 @@ export async function generateAlertSuggestions(symbol: string): Promise<AlertSug
 
     // Detect patterns and sentiment
     const [patterns, sentiment] = await Promise.all([
-      detectAllPatterns(timeSeries).catch(() => []),
+      Promise.resolve(detectAllPatterns(timeSeries)).catch(() => []),
       calculateTechnicalSentiment(timeSeries).catch(() => null),
     ]);
 
