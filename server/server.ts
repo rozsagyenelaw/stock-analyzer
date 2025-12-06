@@ -175,7 +175,9 @@ app.use(errorLogger);
 
 // Serve static files from client build in production
 if (process.env.NODE_ENV === 'production') {
-  const clientBuildPath = path.join(__dirname, '../client/dist');
+  // __dirname is server/dist, so we need ../../client/dist to get to client/dist
+  const clientBuildPath = path.join(__dirname, '../../client/dist');
+  logger.info(`[PRODUCTION] Serving client from: ${clientBuildPath}`);
   app.use(express.static(clientBuildPath));
 
   // Handle client-side routing - send all non-API requests to index.html
