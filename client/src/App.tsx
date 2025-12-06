@@ -24,6 +24,7 @@ import OptionsFlow from './pages/OptionsFlow';
 import TradeIdeas from './pages/TradeIdeas';
 import DailyPicks from './pages/DailyPicks';
 import TradeComparison from './pages/TradeComparison';
+import SmartAlerts from './pages/SmartAlerts';
 import Layout from './components/common/Layout';
 
 function App() {
@@ -54,6 +55,7 @@ function App() {
                     <Route path="/trade-ideas" element={<TradeIdeas />} />
                     <Route path="/daily-picks" element={<DailyPicks />} />
                     <Route path="/trade-comparison" element={<TradeComparison />} />
+                    <Route path="/smart-alerts" element={<SmartAlerts />} />
 
                     {/* Auth-required routes */}
                     <Route
