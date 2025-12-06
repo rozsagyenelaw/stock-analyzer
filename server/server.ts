@@ -1,5 +1,6 @@
 import dotenv from 'dotenv';
 // Load environment variables FIRST before any other imports
+// Trigger rebuild for Daily Picks feature
 dotenv.config();
 
 import express from 'express';
