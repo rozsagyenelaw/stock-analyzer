@@ -75,12 +75,25 @@ const DailyPicks: React.FC = () => {
         minScore: '60',
       });
 
-      const response = await fetch(`/api/daily-picks?${params}`);
-      if (!response.ok) throw new Error('Failed to fetch recommendations');
+      const url = `/api/daily-picks?${params}`;
+      console.log('[DailyPicks] Fetching from:', url);
+      console.log('[DailyPicks] Full URL:', window.location.origin + url);
+
+      const response = await fetch(url);
+      console.log('[DailyPicks] Response status:', response.status);
+      console.log('[DailyPicks] Response headers:', Object.fromEntries(response.headers.entries()));
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('[DailyPicks] Error response:', errorText);
+        throw new Error(`Failed to fetch recommendations: ${response.status} ${errorText}`);
+      }
 
       const data = await response.json();
+      console.log('[DailyPicks] Success! Got data:', data);
       setRecommendations(data);
     } catch (err: any) {
+      console.error('[DailyPicks] Fetch error:', err);
       setError(err.message);
     } finally {
       setLoading(false);

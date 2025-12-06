@@ -8,6 +8,11 @@ const router = express.Router();
  * Get AI-powered daily trade recommendations
  */
 router.get('/', async (req, res) => {
+  console.log('[dailyPicks] ===== REQUEST RECEIVED =====');
+  console.log('[dailyPicks] URL:', req.url);
+  console.log('[dailyPicks] Query params:', req.query);
+  console.log('[dailyPicks] Headers:', req.headers);
+
   try {
     const { accountSize, riskLevel, categories, minScore } = req.query;
 
@@ -23,13 +28,14 @@ router.get('/', async (req, res) => {
       options.categories = cats.filter(c => c === 'stock_trade' || c === 'options_trade') as any;
     }
 
-    console.log('Fetching daily recommendations with options:', options);
+    console.log('[dailyPicks] Fetching daily recommendations with options:', options);
 
     const recommendations = await getDailyRecommendations(options);
 
+    console.log('[dailyPicks] Success! Returning', recommendations.topPicks.length, 'recommendations');
     res.json(recommendations);
   } catch (error: any) {
-    console.error('Error fetching daily recommendations:', error);
+    console.error('[dailyPicks] ERROR:', error);
     res.status(500).json({ error: error.message });
   }
 });

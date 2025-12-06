@@ -124,6 +124,12 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
+// DEBUG: Log ALL requests
+app.use((req, res, next) => {
+  console.log(`[DEBUG] ${req.method} ${req.url} - Headers:`, JSON.stringify(req.headers, null, 2));
+  next();
+});
+
 // API routes
 app.use('/api/auth', authRouter); // Authentication routes (no auth required)
 app.use('/api/stocks', stocksRouter);
