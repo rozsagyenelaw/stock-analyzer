@@ -64,7 +64,7 @@ export default function TradeIdeas() {
   const [expandedCard, setExpandedCard] = useState<string | null>(null);
 
   // Fetch available strategies
-  const { data: strategies = [], isLoading: strategiesLoading } = useQuery({
+  const { data: strategies = [] } = useQuery({
     queryKey: ['trade-strategies'],
     queryFn: async () => {
       const response = await axios.get(`${API_BASE_URL}/api/trade-ideas/strategies`);
